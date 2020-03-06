@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## R Markdown
 
 ```{r packages, message=FALSE, include=FALSE}
-# install.packages(c('tidyverse', 'knitr', 'rmarkdown', 'markdown', 'data.table', 'plotly', 'viridis', 'hrbrthemes'))
+# install.packages(c('tidyverse', 'knitr', 'rmarkdown', 'markdown', 'data.table', 'plotly', 'viridis', 'hrbrthemes', 'lubridate'))
 # setwd("C:/Users/Hapoc/Desktop/M1 INFO/INFO0808 - Visualisation de données/info0808_project")
 ```
 
@@ -28,6 +28,7 @@ library(data.table)
 library(plotly)
 library(viridis) # color palettes for readability and colorblindness
 library(hrbrthemes)
+library(lubridate)
 ```
 
 Chargement des jeux de données :
@@ -61,25 +62,33 @@ anime_rank_100 <- df_anime[df_anime$popularity!=0] %>%
   filter(popularity <= 100) %>%
   mutate(point = (as.numeric(scored_by) * as.numeric(favorites) * as.numeric(score)) / 10000000000)
 
-print(anime_rank_100)
+anime_rank_100
 ```
 
-```{r graph100, echo=TRUE}
-p <- anime_rank_100 %>% 
+```{r bbl_100, echo=TRUE}
+bbl_chart <- anime_rank_100 %>% 
   ggplot(aes(x=rank, y=popularity, size=point, color=popularity, text=title)) +
-  geom_point(alpha=0.75) +
+  geom_point(alpha=0.7) +
   scale_size(range = c(1.4, 19)) +
   scale_color_viridis() +
   labs(title='In Terms Of Rank And Popularity TOP 100 Animes', x='Rank', y='Popularity') +
   theme_ipsum() +
-  theme(legend.position='none')
+  theme(axis.title.x = element_text(size=14),
+        axis.title.y = element_text(size=14)) +
+  scale_x_continuous(
+    limits = c(0,100),
+    breaks=seq(0,100,10)
+  ) +
+  scale_y_continuous(
+    limits = c(-5,100),
+    breaks=seq(0,100,10)
+  )
 
-# turn ggplot interactive with plotly
-p <- ggplotly(p, tooltip=c('rank', 'popularity'))
-p
+bbl_chart <- ggplotly(bbl_chart, tooltip=c('rank', 'popularity'))
+bbl_chart
 ```
 
-```{r graphe line 100, echo=TRUE, fig.height=6, fig.width=20, message=FALSE, warning=FALSE}
+```{r line_100, echo=TRUE, fig.height=6, fig.width=20, message=FALSE, warning=FALSE}
 point_plot_pop <- df_anime[df_anime$popularity!=0] %>%
   arrange(popularity) %>% head(n = 100) %>% 
   select(title, popularity, rank) %>%
@@ -108,5 +117,81 @@ point_plot_pop
 
 ```{r}
 point_plot_pop %>% filter(popularity == 17)
+```
+
+```{r users}
+users <- users[!is.null(users$birth_date)]
+users$age <- as.period(interval(start=users$birth_date, end=as.Date(now())))$year
+```
+
+```{r box_gender_age, echo=TRUE, message=FALSE, warning=FALSE}
+box_gender_age <- users %>% 
+  ggplot(aes(x=gender, y=age, fill=gender)) +
+  geom_boxplot() +
+  theme_ipsum() +
+  theme(
+    legend.position='none',
+    axis.title.x = element_text(size=14),
+    axis.title.y = element_text(size=14)
+  ) +
+  scale_y_continuous(
+    expand = c(0, 0),
+    limits = c(-1,60),
+    breaks=seq(0,60,5)
+  ) +
+  ggtitle("Users' age by gender")
+
+box_gender_age <- ggplotly(box_gender_age)
+box_gender_age
+```
+
+```{r box_gender_spent, echo=TRUE, message=FALSE, warning=FALSE}
+box_gender_spent <- users %>% 
+  ggplot(aes(x=gender, y=user_days_spent_watching, fill=gender)) +
+  geom_boxplot() +
+  theme_ipsum() +
+  theme(
+    legend.position='none',
+    axis.title.x = element_text(size=14),
+    axis.title.y = element_text(size=14)
+  ) +
+  scale_y_continuous(
+    expand = c(0, 0),
+    limits = c(-1,301),
+    breaks=seq(0,300,50)
+  ) +
+  ggtitle("Users' days spent by gender")
+
+box_gender_spent <- ggplotly(box_gender_spent)
+box_gender_spent
+```
+
+```{r scatter_age, echo=TRUE, fig.height=6, fig.width=20, message=FALSE, warning=FALSE}
+scatter_age <- users %>%
+  ggplot(aes(x=age, y=user_days_spent_watching, color=gender)) +
+  geom_point(alpha=0.5) +
+  theme_ipsum() +
+  scale_color_manual(values=c('red', 'blue')) +
+  theme(
+    legend.position='none',
+    axis.title.x = element_text(size=14),
+    axis.title.y = element_text(size=14),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  scale_x_continuous(
+    expand = c(0, 0),
+    limits = c(-1,81),
+    breaks=seq(0,80,5)
+  ) +
+  scale_y_continuous(
+    expand = c(0, 0),
+    limits = c(-1,1001),
+    breaks=seq(0,1000,200)
+  ) +
+  ggtitle("Anime watchers' age")
+  
+scatter_age <- ggplotly(scatter_age)
+scatter_age
 ```
 

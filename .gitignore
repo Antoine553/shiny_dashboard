@@ -17,6 +17,7 @@ src/gwt/.ant-targets-build.xml
 .Rproj.user
 .Rhistory
 .RData
+.RDataTmp
 .Rprofile
 /src/gwt/bin.test/
 /src/gwt/gwt-unitCache/
