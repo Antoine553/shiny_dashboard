@@ -1,0 +1,83 @@
+---
+title: "Projet INFO0808 – Visualisation de données"
+author: "FUZELLIER Maxence, BARBET Antoine"
+date: "04/03/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r packages, message=FALSE, include=FALSE}
+# install.packages(c('tidyverse', 'knitr', 'rmarkdown', 'markdown', 'data.table', 'plotly', 'viridis', 'hrbrthemes'))
+# setwd("C:/Users/Hapoc/Desktop/M1 INFO/INFO0808 - Visualisation de données/info0808_project")
+```
+
+Import des packages :
+```{r load, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(knitr)
+library(rmarkdown)
+library(markdown)
+library(data.table)
+library(plotly)
+library(viridis) # color palettes for readability and colorblindness
+library(hrbrthemes)
+```
+
+Chargement des jeux de données :
+```{r datasets, message=FALSE}
+df_anime <- fread(file='datasets/anime_filtered.csv')
+df_users <- fread(file='datasets/users_filtered.csv')
+df_userlists <- fread(file='datasets/animelists_filtered.csv')
+```
+
+```{r data, echo=TRUE}
+anime <- df_anime[!is.null(df_anime$genre)] %>% 
+  select(anime_id, title, type, source, score, scored_by, rank, popularity, genre)
+
+users <- df_users[df_users$gender %in% c('Female','Male')] %>% 
+  select(username, gender, user_completed, user_days_spent_watching, birth_date)
+
+userlists <- df_userlists[df_userlists$my_status %in% c(1,2) & !is.null(df_userlists$anime_id)] %>% 
+  select(username, anime_id, my_score)
+
+userlists <- inner_join(userlists, users)
+userlists <- left_join(userlists, anime)
+
+userlists_sub <- userlists[!is.null(userlists$genre)] %>% head(n = 100000)
+head(userlists_sub)
+```
+
+```{r anime_rank, echo=TRUE}
+anime_rank_100 <- df_anime[df_anime$popularity!=0] %>% 
+  arrange(rank) %>% head(n = 100) %>%
+  select(popularity, rank, title, type, source, scored_by, favorites, score) %>%
+  filter(popularity <= 100) %>%
+  mutate(point = (as.numeric(scored_by) * as.numeric(favorites) * as.numeric(score)) / 10000000000)
+
+print(anime_rank_100)
+```
+
+```{r graph100, echo=TRUE}
+hrbrthemes::import_roboto_condensed()
+
+# Classic ggplot
+p <- anime_rank_100 %>% 
+  ggplot(aes(x=rank, y=popularity, size=point, color=popularity, text=title)) +
+  geom_point(alpha=0.7) +
+  scale_size(range = c(1.4, 19)) +
+  scale_color_viridis() +
+  labs(title='In Terms Of Rank And Popularity TOP 100 Animes', x='Rank', y='Popularity') +
+  theme_ipsum() +
+  theme(legend.position='none')
+
+# turn ggplot interactive with plotly
+p <- ggplotly(p, tooltip=c('rank', 'popularity'))
+p
+```
+
+
