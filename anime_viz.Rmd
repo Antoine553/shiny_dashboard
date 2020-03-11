@@ -39,9 +39,6 @@ df_userlists <- fread(file='datasets/animelists_filtered.csv')
 ```
 
 ```{r data, echo=TRUE}
-anime <- df_anime[!is.null(df_anime$genre)] %>% 
-  select(anime_id, title, type, source, score, scored_by, rank, popularity, genre)
-
 users <- df_users[df_users$gender %in% c('Female','Male')] %>% 
   select(username, gender, user_completed, user_days_spent_watching, birth_date)
 
@@ -60,7 +57,7 @@ anime_rank_100 <- df_anime[df_anime$popularity!=0] %>%
   arrange(rank) %>% head(n = 100) %>%
   select(popularity, rank, title, type, source, scored_by, favorites, score) %>%
   filter(popularity <= 100) %>%
-  mutate(point = (as.numeric(scored_by) * as.numeric(favorites) * as.numeric(score)) / 10000000000)
+  mutate(point = (as.numeric(scored_by) * as.numeric(favorites) * as.numeric(score)) / 10^10)
 
 anime_rank_100
 ```
@@ -77,11 +74,11 @@ bbl_chart <- anime_rank_100 %>%
         axis.title.y = element_text(size=14)) +
   scale_x_continuous(
     limits = c(0,100),
-    breaks=seq(0,100,10)
+    breaks = seq(0,100,10)
   ) +
   scale_y_continuous(
     limits = c(-5,100),
-    breaks=seq(0,100,10)
+    breaks = seq(0,100,10)
   )
 
 bbl_chart <- ggplotly(bbl_chart, tooltip=c('rank', 'popularity'))
@@ -118,6 +115,81 @@ point_plot_pop
 ```{r}
 point_plot_pop %>% filter(popularity == 17)
 ```
+
+```{r score_note, echo=TRUE, message=FALSE, warning=TRUE}
+rs_score_notes <- df_anime %>%
+  filter(airing == F & scored_by > 99) %>%
+  ggplot(aes(x=scored_by, y=score)) +
+  stat_bin_hex(bins = 50) +
+  theme_ipsum() +
+  scale_fill_viridis() +
+  stat_smooth(
+    method = 'lm',
+    color = 'red',
+    formula = y ~ log(x)
+  ) +
+  theme(
+    axis.title.x = element_text(size=14),
+    axis.title.y = element_text(size=14)
+  ) +
+  scale_y_continuous(
+    limits = c(2,9.5),
+    breaks = seq(2,9.5)
+  ) +
+  ggtitle('Relationship between Score and Scored_by')
+
+rs_score_notes <- ggplotly(rs_score_notes)
+rs_score_notes
+```
+
+```{r score_source, echo=TRUE, message=FALSE, warning=TRUE}
+median_val <- df_anime %>% 
+  select(scored_by, score) %>% 
+  filter(scored_by > 99) %>% 
+  summarize(median_sc = median(score))
+
+
+score_source <- df_anime %>% 
+  filter(airing == F & scored_by > 99) %>%
+  select(score, scored_by, source) %>%
+  ggplot(aes(x=source, y=score)) +
+  geom_boxplot(fill='deepskyblue') + 
+  geom_hline(aes(yintercept=median_val[[1]], linetype="median")) +
+  scale_linetype_manual(name='', values=c(median='dashed')) +
+  coord_flip() + 
+  theme_ipsum() +
+  theme(
+    axis.title.x = element_text(size=14),
+    axis.title.y = element_blank(),
+  ) +
+  scale_y_continuous(limits = c(0,10)) +
+  ggtitle('Score Distribution by Source')
+
+score_source <- ggplotly(score_source)
+score_source
+```
+
+```{r score_type, echo=TRUE, message=FALSE, warning=TRUE}
+score_type <- df_anime %>% 
+  filter(airing == F & scored_by > 99) %>%
+  select(score, scored_by, type) %>%
+  ggplot(aes(x=type, y=score)) +
+  geom_boxplot(fill='deepskyblue') + 
+  geom_hline(aes(yintercept=median_val[[1]], linetype="median")) +
+  scale_linetype_manual(name='', values=c(median='dashed')) +
+  coord_flip() + 
+  theme_ipsum() +
+  theme(
+    axis.title.x = element_text(size=14),
+    axis.title.y = element_blank(),
+  ) +
+  scale_y_continuous(limits = c(0,10)) +
+  ggtitle('Score Distribution by Type')
+
+score_type <- ggplotly(score_type)
+score_type
+```
+
 
 ```{r users}
 users <- users[!is.null(users$birth_date)]
