@@ -35,43 +35,23 @@ Chargement des jeux de données :
 ```{r datasets, message=FALSE}
 df_anime <- fread(file='datasets/anime_filtered.csv')
 df_users <- fread(file='datasets/users_filtered.csv')
-df_userlists <- fread(file='datasets/animelists_filtered.csv')
-```
-
-```{r data, echo=TRUE}
-users <- df_users[df_users$gender %in% c('Female','Male')] %>% 
-  select(username, gender, user_completed, user_days_spent_watching, birth_date)
-
-userlists <- df_userlists[df_userlists$my_status %in% c(1,2) & !is.null(df_userlists$anime_id)] %>% 
-  select(username, anime_id, my_score)
-
-userlists <- inner_join(userlists, users)
-userlists <- left_join(userlists, anime)
-
-userlists_sub <- userlists[!is.null(userlists$genre)] %>% head(n = 100000)
-head(userlists_sub)
-```
-
-```{r anime_rank, echo=TRUE}
-anime_rank_100 <- df_anime[df_anime$popularity!=0] %>% 
-  arrange(rank) %>% head(n = 100) %>%
-  select(popularity, rank, title, type, source, scored_by, favorites, score) %>%
-  filter(popularity <= 100) %>%
-  mutate(point = (as.numeric(scored_by) * as.numeric(favorites) * as.numeric(score)) / 10^10)
-
-anime_rank_100
 ```
 
 ```{r bbl_100, echo=TRUE}
-bbl_chart <- anime_rank_100 %>% 
+bbl_chart <- df_anime[df_anime$popularity!=0] %>% 
+  arrange(rank) %>% head(n = 100) %>%
+  select(popularity, rank, title, scored_by, favorites, score) %>%
+  filter(popularity <= 100) %>%
+  mutate(point = (as.numeric(scored_by) * as.numeric(favorites) * as.numeric(score)) / 10^10) %>% 
   ggplot(aes(x=rank, y=popularity, size=point, color=popularity, text=title)) +
   geom_point(alpha=0.7) +
   scale_size(range = c(1.4, 19)) +
   scale_color_viridis() +
-  labs(title='In Terms Of Rank And Popularity TOP 100 Animes', x='Rank', y='Popularity') +
   theme_ipsum() +
-  theme(axis.title.x = element_text(size=14),
-        axis.title.y = element_text(size=14)) +
+  theme(
+    axis.title.x = element_text(size=14),
+    axis.title.y = element_text(size=14)
+  ) +
   scale_x_continuous(
     limits = c(0,100),
     breaks = seq(0,100,10)
@@ -79,7 +59,8 @@ bbl_chart <- anime_rank_100 %>%
   scale_y_continuous(
     limits = c(-5,100),
     breaks = seq(0,100,10)
-  )
+  ) +
+  labs(title='In Terms Of Rank And Popularity TOP 100 Animes', x='Rank', y='Popularity')
 
 bbl_chart <- ggplotly(bbl_chart, tooltip=c('rank', 'popularity'))
 bbl_chart
@@ -192,7 +173,9 @@ score_type
 
 
 ```{r users}
-users <- users[!is.null(users$birth_date)]
+users <- df_users[df_users$gender %in% c('Female','Male') & !is.null(users$birth_date)] %>% 
+  select(username, gender, user_completed, user_days_spent_watching, birth_date)
+
 users$age <- as.period(interval(start=users$birth_date, end=as.Date(now())))$year
 ```
 
