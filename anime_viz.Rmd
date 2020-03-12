@@ -38,13 +38,13 @@ df_users <- fread(file='datasets/users_filtered.csv')
 ```
 
 ```{r bbl_100, echo=TRUE}
-bbl_chart <- df_anime[df_anime$popularity!=0] %>% 
+bbl_chart <- df_anime[df_anime$popularity != 0] %>% 
   arrange(rank) %>% head(n = 100) %>%
   select(popularity, rank, title, scored_by, favorites, score) %>%
   filter(popularity <= 100) %>%
   mutate(point = (as.numeric(scored_by) * as.numeric(favorites) * as.numeric(score)) / 10^10) %>% 
-  ggplot(aes(x=rank, y=popularity, size=point, color=popularity, text=title)) +
-  geom_point(alpha=0.7) +
+  ggplot(aes(x = rank, y = popularity, size = point, color = popularity, text = title)) +
+  geom_point(alpha = 0.7) +
   scale_size(range = c(1.4, 19)) +
   scale_color_viridis() +
   theme_ipsum() +
@@ -53,37 +53,37 @@ bbl_chart <- df_anime[df_anime$popularity!=0] %>%
     axis.title.y = element_text(size=14)
   ) +
   scale_x_continuous(
-    limits = c(0,100),
-    breaks = seq(0,100,10)
+    limits = c(0, 100),
+    breaks = seq(0, 100, 10)
   ) +
   scale_y_continuous(
-    limits = c(-5,100),
-    breaks = seq(0,100,10)
+    limits = c(-5, 100),
+    breaks = seq(0, 100, 10)
   ) +
-  labs(title='In Terms Of Rank And Popularity TOP 100 Animes', x='Rank', y='Popularity')
+  labs(title = 'In Terms Of Rank And Popularity TOP 100 Animes', x='Rank', y='Popularity')
 
-bbl_chart <- ggplotly(bbl_chart, tooltip=c('rank', 'popularity'))
+bbl_chart <- ggplotly(bbl_chart, tooltip = c('rank', 'popularity'))
 bbl_chart
 ```
 
 ```{r line_100, echo=TRUE, fig.height=6, fig.width=20, message=FALSE, warning=FALSE}
-point_plot_pop <- df_anime[df_anime$popularity!=0] %>%
+point_plot_pop <- df_anime[df_anime$popularity != 0] %>%
   arrange(popularity) %>% head(n = 100) %>% 
   select(title, popularity, rank) %>%
-  ggplot(aes(x=popularity, y=rank)) +
-  geom_line(color='black') +
-  geom_point(size=2, color='red') +
+  ggplot(aes(x = popularity, y=rank)) +
+  geom_line(color = 'black') +
+  geom_point(size = 2, color = 'red') +
   theme_ipsum() +
   theme(axis.title.x = element_text(size=14),
         axis.title.y = element_text(size=14)) +
   scale_x_continuous(
     expand = c(0, 0),
-    limits = c(-1,101),
-    breaks=seq(0,100,5)
+    limits = c(-1, 101),
+    breaks = seq(0, 100, 5)
   ) +
   scale_y_continuous(
-    breaks = seq(0,3000,500),
-    limits = c(0,3000)
+    breaks = seq(0, 3000, 500),
+    limits = c(0, 3000)
   ) +
   ggtitle('Top 100 anime with their rank score')
   
@@ -100,7 +100,7 @@ point_plot_pop %>% filter(popularity == 17)
 ```{r score_note, echo=TRUE, message=FALSE, warning=TRUE}
 rs_score_notes <- df_anime %>%
   filter(airing == F & scored_by > 99) %>%
-  ggplot(aes(x=scored_by, y=score)) +
+  ggplot(aes(x = scored_by, y = score)) +
   stat_bin_hex(bins = 50) +
   theme_ipsum() +
   scale_fill_viridis() +
@@ -114,8 +114,8 @@ rs_score_notes <- df_anime %>%
     axis.title.y = element_text(size=14)
   ) +
   scale_y_continuous(
-    limits = c(2,9.5),
-    breaks = seq(2,9.5)
+    limits = c(2, 9.5),
+    breaks = seq(2, 9.5)
   ) +
   ggtitle('Relationship between Score and Scored_by')
 
@@ -133,17 +133,17 @@ median_val <- df_anime %>%
 score_source <- df_anime %>% 
   filter(airing == F & scored_by > 99) %>%
   select(score, scored_by, source) %>%
-  ggplot(aes(x=source, y=score)) +
-  geom_boxplot(fill='deepskyblue') + 
-  geom_hline(aes(yintercept=median_val[[1]], linetype="median")) +
-  scale_linetype_manual(name='', values=c(median='dashed')) +
+  ggplot(aes(x = source, y = score)) +
+  geom_boxplot(fill = 'deepskyblue') + 
+  geom_hline(aes(yintercept = median_val[[1]], linetype = 'median')) +
+  scale_linetype_manual(name = '', values = c(median = 'dashed')) +
   coord_flip() + 
   theme_ipsum() +
   theme(
     axis.title.x = element_text(size=14),
     axis.title.y = element_blank(),
   ) +
-  scale_y_continuous(limits = c(0,10)) +
+  scale_y_continuous(limits = c(0, 10)) +
   ggtitle('Score Distribution by Source')
 
 score_source <- ggplotly(score_source)
@@ -154,26 +154,72 @@ score_source
 score_type <- df_anime %>% 
   filter(airing == F & scored_by > 99) %>%
   select(score, scored_by, type) %>%
-  ggplot(aes(x=type, y=score)) +
-  geom_boxplot(fill='deepskyblue') + 
-  geom_hline(aes(yintercept=median_val[[1]], linetype="median")) +
-  scale_linetype_manual(name='', values=c(median='dashed')) +
+  ggplot(aes(x = type, y = score)) +
+  geom_boxplot(fill = 'deepskyblue') + 
+  geom_hline(aes(yintercept = median_val[[1]], linetype = 'median')) +
+  scale_linetype_manual(name = '', values = c(median = 'dashed')) +
   coord_flip() + 
   theme_ipsum() +
   theme(
     axis.title.x = element_text(size=14),
     axis.title.y = element_blank(),
   ) +
-  scale_y_continuous(limits = c(0,10)) +
+  scale_y_continuous(limits = c(0, 10)) +
   ggtitle('Score Distribution by Type')
 
 score_type <- ggplotly(score_type)
 score_type
 ```
 
+```{r date_data, echo=TRUE, message=TRUE, warning=TRUE}
+date_data <- df_anime %>% 
+  rowwise() %>% 
+  mutate(aired = str_extract_all(aired, "(None|[0-9]*-[0-9]+-[0-9]+)")[[1]][1]) %>% 
+  ungroup() %>%
+  mutate(
+    year = as.integer(if_else(nchar(aired) == 10, substr(aired, 1, 4), NULL)),
+    month = as.integer(if_else(nchar(aired) == 10, substr(aired, 6, 7), NULL)),
+    season = if_else(month %in% c(1:3), 'Winter',
+                     if_else(month %in% c(4:6), 'Spring',
+                             if_else(month %in% c(7:9), 'Summer', 
+                                     if_else(month %in% c(10:12), 'Autumn', NULL)))),
+    year_season = paste(year, season),
+    decade = as.factor(if_else(!is.na(year), 
+                               paste(substr(year, 1, 3), "0's", sep = ''), NULL))
+  ) %>% 
+  arrange(year, month)
+```
+
+```{r score_density_decade, echo=TRUE, message=TRUE, warning=TRUE}
+score_density_dec <- date_data %>%
+  select(decade, type, score) %>%
+  filter(!is.na(decade), type == 'TV', score != 0) %>% 
+  ggplot(aes(score, group = decade, fill = decade)) +
+  geom_density(adjust = 1.25, alpha = .75) +
+  theme_ipsum() +
+  theme(
+    legend.position='top',
+    axis.title.x = element_text(size=14),
+    axis.title.y = element_text(size=14),
+  ) +
+  scale_x_continuous(
+    limits = c(0, 10),
+    breaks = seq(0, 10, 2.5)
+  ) +
+  scale_y_continuous(
+    expand = c(0, 0),
+    limits = c(0, 1),
+    breaks = seq(0, 1, 0.25)
+  ) +
+  ggtitle('TV anime score density by decade')
+
+score_density_dec <- ggplotly(score_density_dec)
+score_density_dec
+```
+
 
 ```{r users}
-users <- df_users[df_users$gender %in% c('Female','Male') & !is.null(users$birth_date)] %>% 
+users <- df_users[df_users$gender %in% c('Female','Male') & !is.null(df_users$birth_date)] %>% 
   select(username, gender, user_completed, user_days_spent_watching, birth_date)
 
 users$age <- as.period(interval(start=users$birth_date, end=as.Date(now())))$year
@@ -181,7 +227,7 @@ users$age <- as.period(interval(start=users$birth_date, end=as.Date(now())))$yea
 
 ```{r box_gender_age, echo=TRUE, message=FALSE, warning=FALSE}
 box_gender_age <- users %>% 
-  ggplot(aes(x=gender, y=age, fill=gender)) +
+  ggplot(aes(x = gender, y = age, fill = gender)) +
   geom_boxplot() +
   theme_ipsum() +
   theme(
@@ -191,8 +237,8 @@ box_gender_age <- users %>%
   ) +
   scale_y_continuous(
     expand = c(0, 0),
-    limits = c(-1,60),
-    breaks=seq(0,60,5)
+    limits = c(-1, 60),
+    breaks = seq(0, 60, 5)
   ) +
   ggtitle("Users' age by gender")
 
@@ -202,18 +248,18 @@ box_gender_age
 
 ```{r box_gender_spent, echo=TRUE, message=FALSE, warning=FALSE}
 box_gender_spent <- users %>% 
-  ggplot(aes(x=gender, y=user_days_spent_watching, fill=gender)) +
+  ggplot(aes(x = gender, y = user_days_spent_watching, fill = gender)) +
   geom_boxplot() +
   theme_ipsum() +
   theme(
-    legend.position='none',
+    legend.position = 'none',
     axis.title.x = element_text(size=14),
     axis.title.y = element_text(size=14)
   ) +
   scale_y_continuous(
     expand = c(0, 0),
-    limits = c(-1,301),
-    breaks=seq(0,300,50)
+    limits = c(-1, 301),
+    breaks = seq(0, 300, 50)
   ) +
   ggtitle("Users' days spent by gender")
 
@@ -221,14 +267,14 @@ box_gender_spent <- ggplotly(box_gender_spent)
 box_gender_spent
 ```
 
-```{r scatter_age, echo=TRUE, fig.height=6, fig.width=20, message=FALSE, warning=FALSE}
+```{r scatter_age, echo=TRUE, fig.height=13, fig.width=20, message=FALSE, warning=FALSE}
 scatter_age <- users %>%
-  ggplot(aes(x=age, y=user_days_spent_watching, color=gender)) +
-  geom_point(alpha=0.5) +
+  ggplot(aes(x = age, y = user_days_spent_watching, color = gender)) +
+  geom_point(alpha = 0.5) +
   theme_ipsum() +
-  scale_color_manual(values=c('red', 'blue')) +
+  scale_color_manual(values = c('red', 'blue')) +
   theme(
-    legend.position='none',
+    legend.position = 'none',
     axis.title.x = element_text(size=14),
     axis.title.y = element_text(size=14),
     panel.grid.major = element_blank(),
@@ -236,13 +282,13 @@ scatter_age <- users %>%
   ) +
   scale_x_continuous(
     expand = c(0, 0),
-    limits = c(-1,81),
-    breaks=seq(0,80,5)
+    limits = c(-1, 81),
+    breaks = seq(0, 80, 5)
   ) +
   scale_y_continuous(
     expand = c(0, 0),
-    limits = c(-1,1001),
-    breaks=seq(0,1000,200)
+    limits = c(-1, 1001),
+    breaks = seq(0, 1000, 200)
   ) +
   ggtitle("Anime watchers' age")
   
