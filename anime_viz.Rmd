@@ -4,7 +4,7 @@ author: "FUZELLIER Maxence, BARBET Antoine"
 date: "04/03/2020"
 output: html_document
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
@@ -15,7 +15,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r packages, message=FALSE, include=FALSE}
 # install.packages(c('tidyverse', 'knitr', 'rmarkdown', 'markdown', 'data.table', 'plotly', 'viridis', 'hrbrthemes', 'lubridate'))
-# setwd("C:/Users/Hapoc/Desktop/M1 INFO/INFO0808 - Visualisation de données/info0808_project")
 ```
 
 Import des packages :
@@ -37,7 +36,7 @@ df_anime <- fread(file='datasets/anime_filtered.csv')
 df_users <- fread(file='datasets/users_filtered.csv')
 ```
 
-```{r bbl_100, echo=TRUE}
+```{r bbl_100, echo=TRUE, fig.height=7, fig.width=10}
 bbl_chart <- df_anime[df_anime$popularity != 0] %>% 
   arrange(rank) %>% head(n = 100) %>%
   select(popularity, rank, title, scored_by, favorites, score) %>%
@@ -66,7 +65,7 @@ bbl_chart <- ggplotly(bbl_chart, tooltip = c('rank', 'popularity'))
 bbl_chart
 ```
 
-```{r line_100, echo=TRUE, fig.height=6, fig.width=20, message=FALSE, warning=FALSE}
+```{r line_100, echo=TRUE, fig.height=5, fig.width=10, message=FALSE, warning=FALSE}
 point_plot_pop <- df_anime[df_anime$popularity != 0] %>%
   arrange(popularity) %>% head(n = 100) %>% 
   select(title, popularity, rank) %>%
@@ -94,10 +93,10 @@ point_plot_pop
 ```
 
 ```{r}
-point_plot_pop %>% filter(popularity == 17)
+df_anime[df_anime$popularity != 0] %>% filter(popularity == 17) %>% select(anime_id, title, popularity, rank)
 ```
 
-```{r score_note, echo=TRUE, message=FALSE, warning=TRUE}
+```{r score_note, echo=TRUE, fig.height=8, fig.width=10, message=FALSE, warning=TRUE}
 rs_score_notes <- df_anime %>%
   filter(airing == F & scored_by > 99) %>%
   ggplot(aes(x = scored_by, y = score)) +
@@ -123,7 +122,7 @@ rs_score_notes <- ggplotly(rs_score_notes)
 rs_score_notes
 ```
 
-```{r score_source, echo=TRUE, message=FALSE, warning=TRUE}
+```{r score_source, echo=TRUE, message=FALSE, warning=TRUE, fig.height=7, fig.width=10}
 median_val <- df_anime %>% 
   select(scored_by, score) %>% 
   filter(scored_by > 99) %>% 
@@ -150,7 +149,7 @@ score_source <- ggplotly(score_source)
 score_source
 ```
 
-```{r score_type, echo=TRUE, message=FALSE, warning=TRUE}
+```{r score_type, echo=TRUE, message=FALSE, warning=TRUE, fig.height=7, fig.width=10}
 score_type <- df_anime %>% 
   filter(airing == F & scored_by > 99) %>%
   select(score, scored_by, type) %>%
@@ -190,7 +189,7 @@ date_data <- df_anime %>%
   arrange(year, month)
 ```
 
-```{r score_density_decade, echo=TRUE, message=TRUE, warning=TRUE}
+```{r score_density_decade, echo=TRUE, message=TRUE, warning=TRUE, fig.height=5, fig.width=10}
 score_density_dec <- date_data %>%
   select(decade, type, score) %>%
   filter(!is.na(decade), type == 'TV', score != 0) %>% 
@@ -243,7 +242,6 @@ box_gender_age <- users %>%
   ggtitle("Users' age by gender")
 
 box_gender_age <- ggplotly(box_gender_age)
-box_gender_age
 ```
 
 ```{r box_gender_spent, echo=TRUE, message=FALSE, warning=FALSE}
@@ -264,15 +262,19 @@ box_gender_spent <- users %>%
   ggtitle("Users' days spent by gender")
 
 box_gender_spent <- ggplotly(box_gender_spent)
-box_gender_spent
 ```
 
-```{r scatter_age, echo=TRUE, fig.height=13, fig.width=20, message=FALSE, warning=FALSE}
+```{r sub_boxplot, echo=TRUE, fig.height=7, fig.width=10, message=TRUE, warning=TRUE}
+subplot <- subplot(box_gender_age, box_gender_spent, nrows=1, titleY = T, margin = 0.07)
+subplot
+```
+
+
+```{r scatter_age, echo=TRUE, fig.height=7, fig.width=10, message=FALSE, warning=FALSE}
 scatter_age <- users %>%
   ggplot(aes(x = age, y = user_days_spent_watching, color = gender)) +
   geom_point(alpha = 0.5) +
   theme_ipsum() +
-  scale_color_manual(values = c('red', 'blue')) +
   theme(
     legend.position = 'none',
     axis.title.x = element_text(size=14),
