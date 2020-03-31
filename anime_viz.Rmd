@@ -275,6 +275,7 @@ scatter_age <- users %>%
   ggplot(aes(x = age, y = user_days_spent_watching, color = gender)) +
   geom_point(alpha = 0.5) +
   theme_ipsum() +
+  scale_color_manual(values= c('red', 'blue')) +
   theme(
     legend.position = 'none',
     axis.title.x = element_text(size=14),
@@ -294,7 +295,7 @@ scatter_age <- users %>%
   ) +
   ggtitle("Anime watchers' age")
   
-scatter_age <- ggplotly(scatter_age)
+#scatter_age <- ggplotly(scatter_age)
 scatter_age
 ```
 
