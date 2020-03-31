@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## R Markdown
 
 ```{r packages, message=FALSE, include=FALSE}
-# install.packages(c('tidyverse', 'knitr', 'rmarkdown', 'markdown', 'data.table', 'plotly', 'viridis', 'hrbrthemes', 'lubridate'))
+install.packages(c('tidyverse', 'knitr', 'rmarkdown', 'markdown', 'data.table', 'plotly', 'viridis', 'hrbrthemes', 'lubridate'))
 ```
 
 Import des packages :
