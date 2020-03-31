@@ -59,8 +59,8 @@ shinyServer(function(input, output) {
   output$bbl_chart_pop <- renderPlotly({
     df_anime[df_anime$popularity != 0] %>% 
       arrange(rank) %>% head(n = 100) %>%
-      select(popularity, rank, title, scored_by, favorites, score) %>%
-      filter(popularity <= input$slider_popularity) %>%
+      select(popularity, type, rank, title, scored_by, favorites, score) %>%
+      filter(popularity <= input$slider_popularity, type == 'TV') %>%
       mutate(point = (as.numeric(scored_by) * as.numeric(favorites) * as.numeric(score)) / 10^10) %>% 
       ggplot(aes(x = rank, y = popularity, size = point, color = popularity, text = title)) +
       geom_point(alpha = 0.7) +
@@ -68,8 +68,8 @@ shinyServer(function(input, output) {
       scale_color_viridis() +
       theme_ipsum() +
       theme(
-        axis.title.x = element_text(size=14),
-        axis.title.y = element_text(size=14)
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14)
       ) +
       scale_x_continuous(
         limits = c(0, 100),
@@ -79,14 +79,15 @@ shinyServer(function(input, output) {
         limits = c(-5, 100),
         breaks = seq(0, 100, 10)
       ) +
-      labs(title = 'In Terms Of Rank And Popularity TOP 250 Animes', x='Rank', y='Popularity')
+      labs(title = 'In Terms Of Rank And Popularity TOP 100 Animes', x = 'Rank', y = 'Popularity')
   })
   
   # Point plot rang et popularité
   output$point_plot_pop <- renderPlotly({
     df_anime[df_anime$popularity != 0] %>%
       arrange(popularity) %>% head(n = input$slider_popularity) %>% 
-      select(title, popularity, rank) %>%
+      select(title, popularity, type, rank) %>%
+      filter(type == "TV") %>%
       ggplot(aes(x = popularity, y=rank)) +
       geom_line(color = 'black') +
       geom_point(size = 2, color = 'red') +
@@ -173,7 +174,7 @@ shinyServer(function(input, output) {
     date_data %>% filter(decade %in% input$checkGroup2) %>% select(decade, type, score) %>% 
       filter(!is.na(decade), type == 'TV', score != 0) %>% 
       ggplot(aes(score, group = decade, fill = decade)) +
-      geom_density(adjust = 1.25, alpha = .75) +
+      geom_density(adjust = 1.25, alpha = .7) +
       theme_ipsum() +
       theme(
         legend.position='top',
@@ -190,6 +191,30 @@ shinyServer(function(input, output) {
         breaks = seq(0, 1, 0.25)
       ) +
       ggtitle('TV anime score density by decade')
+  })
+  
+  # Graphe densité de la distribution des notes par décennie
+  output$score_density_movie <- renderPlotly({
+    date_data %>% filter(decade %in% input$checkGroup3) %>% select(decade, type, score) %>% 
+      filter(!is.na(decade), type == 'Movie', score != 0) %>% 
+      ggplot(aes(score, group = decade, fill = decade)) +
+      geom_density(adjust = 1.25, alpha = .7) +
+      theme_ipsum() +
+      theme(
+        legend.position='top',
+        axis.title.x = element_text(size=14),
+        axis.title.y = element_text(size=14),
+      ) +
+      scale_x_continuous(
+        limits = c(0, 10),
+        breaks = seq(0, 10, 2.5)
+      ) +
+      scale_y_continuous(
+        expand = c(0, 0),
+        limits = c(0, 1),
+        breaks = seq(0, 1, 0.25)
+      ) +
+      ggtitle('Movies score density by decade')
   })
   
   # Liste anime
