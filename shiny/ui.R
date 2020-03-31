@@ -4,7 +4,7 @@ library(shinydashboard)
 ui <- dashboardPage(
     
     # Header avec titre et sidebar
-    dashboardHeader(title = "MyAnimeList dashboard", style = "position: fixed; overflow: visible;"),
+    dashboardHeader(title = "MyAnimeList dashboard"),
     sidebar <- dashboardSidebar(
         sidebarMenu(
             style = "position: fixed; overflow: visible;",
