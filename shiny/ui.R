@@ -1,98 +1,170 @@
 library(shiny)
 library(shinydashboard)
+# library(shinydashboardPlus)
 
 ui <- dashboardPage(
     
     # Header avec titre et sidebar
-    dashboardHeader(title = "MyAnimeList dashboard"),
+    dashboardHeader(title = "MyAnimeList"),
     sidebar <- dashboardSidebar(
         sidebarMenu(
             style = "position: fixed; overflow: visible;",
+            menuItem("Overview", tabName = "overview", icon = icon("eye")),
             menuItem("TV Anime", tabName = "tv_anime", icon = icon("tv")),
             menuItem("Movies", tabName = "movies", icon = icon("film")),
-            menuItem("List of anime", tabName = "list_anime", icon = icon("table"))
+            menuItem("Users", tabName = "users", icon = icon("user")),
+            menuItem("Data", tabName = "list_anime", icon = icon("table"))
         )
     ),
     
     # Body
     dashboardBody(
         tabItems(
+            
+            tabItem(tabName = "overview",
+                    
+                    # Value box
+                    fluidRow(
+                        valueBoxOutput("nb_box"),
+                        valueBoxOutput("nb_genres")
+                    ),
+                    
+                    fluidRow(
+                        box(
+                            title = tagList(shiny::icon("chart-line"), " Number of anime per year"),
+                            width = 6,
+                            status = "primary",
+                            solidHeader = TRUE,
+                            collapsible = TRUE,
+                            plotlyOutput("line_nb_year")
+                        ),
+                        box(
+                            title = tagList(shiny::icon("chart-pie"), " Anime type repartition"),
+                            width = 6,
+                            status = "primary",
+                            solidHeader = TRUE,
+                            collapsible = TRUE,
+                            highchartOutput("pie_type")
+                        ),
+                    ),
+                    
+                    # Top popularité et score
+                    fluidRow(
+                        box(
+                            title = tagList(shiny::icon("fire"), " Most popular anime"),
+                            status = "primary",
+                            solidHeader = TRUE,
+                            DT::dataTableOutput("top_anime_pop"),
+                        ),
+                        
+                        box(
+                            title = tagList(shiny::icon("heart"), " Most liked anime"),
+                            status = "primary",
+                            solidHeader = TRUE,
+                            DT::dataTableOutput("top_anime_score")
+                        )
+                    ),
+                    
+                    # Affichage du graphe de relation entre le score et le nombre de notes attribuées
+                    fluidRow(
+                        box(
+                            title = tagList(shiny::icon("chart-scatter"), " Relationship between Score and Scored_by"),
+                            width = 12,
+                            status = "primary",
+                            solidHeader = TRUE,
+                            collapsible = TRUE,
+                            plotlyOutput("rs_score_notes")
+                        ),
+                        
+                        
+                    ),
+                    
+                    # Boxplots
+                    fluidRow(
+                        # Score par source
+                        box(
+                            title = "Score Distribution by Source",
+                            status = "primary",
+                            solidHeader = TRUE,
+                            collapsible = TRUE,
+                            plotlyOutput("score_source")
+                        ),
+                        
+                        # Score par type
+                        box(
+                            title = "Score Distribution by Type",
+                            status = "primary",
+                            solidHeader = TRUE,
+                            collapsible = TRUE,
+                            plotlyOutput("score_type")
+                        )
+                    ),
+                    
+            ),
+            
             tabItem(tabName = "tv_anime", 
-                h2("Dashboard tab content"),
-                
+                    
                 # Value box
                 fluidRow(
-                    valueBoxOutput("nb_box")
+                    valueBoxOutput("nb_tv_box")
                 ),
                 
+                # Score moyen par année + classification par décennie
+                fluidRow(
+                    # Score moyen par année
+                    box(
+                        title = tagList(shiny::icon("chart-line"), " Average score per year"),
+                        status = "primary",
+                        solidHeader = TRUE,
+                        collapsible = TRUE,
+                        plotlyOutput("score_year_tv")
+                    ),
+                    
+                    # Classification par décennie
+                    box(
+                        title = tagList(shiny::icon("chart-line"), " Ratings evolution during decades"),
+                        status = "primary",
+                        solidHeader = TRUE,
+                        collapsible = TRUE,
+                        plotlyOutput("ratings_tv_decade")
+                    ),
+                    
+                ),
+
                 # Bubble chart, point plot + panel controles
                 fluidRow(
                     # Affichage du bubble chart et du point plot via 2 onglets
                     tabBox(
                         title = "TOP 100 anime", width = 8,
-                        tabPanel("Bubble chart", plotlyOutput("bbl_chart_pop")),
-                        tabPanel("Line plot", plotlyOutput("point_plot_pop"))
+                        tabPanel(tagList(shiny::icon("chart-scatter"), "Bubble chart"), plotlyOutput("bbl_chart_pop")),
+                        tabPanel(tagList(shiny::icon("chart-line"), "Line plot"), plotlyOutput("point_plot_pop"))
                     ),
                     
                     # Slider input pour modifier les graphes en fonction de la popularité
                     box(
-                        title = "Controls",
+                        title = tagList(shiny::icon("gear"), "Controls"),
                         width = 4,
-                        status = "warning",
+                        status = "primary",
                         solidHeader = TRUE,
                         "Popularity:", # br(), "More box content",
                         sliderInput("slider_popularity", "Slider input:", 1, 100, 100, 10)
                     )
                 ),
-                
-                # Affichage du graphe de relation entre le score et le nombre de notes attribuées
-                fluidRow(
-                    box(
-                        title = "plot",
-                        status = "primary",
-                        solidHeader = TRUE,
-                        collapsible = TRUE,
-                        plotlyOutput("rs_score_notes")
-                    )
-                ),
-                
-                # Boxplots
-                fluidRow(
-                    # Score par source
-                    box(
-                        title = "plot",
-                        status = "primary",
-                        solidHeader = TRUE,
-                        collapsible = TRUE,
-                        plotlyOutput("score_source")
-                    ),
                     
-                    # Score par type
-                    box(
-                        title = "plot",
-                        status = "primary",
-                        solidHeader = TRUE,
-                        collapsible = TRUE,
-                        plotlyOutput("score_type")
-                    )
-                ),
                 
-                
-                # Graphe densité score par décennie + panel controles
                 fluidRow(
                     # Graphe densité de la distribution des notes par décennie
                     box(
-                        title = "Title plot 2", 
-                        width = 8, 
-                        status = "primary", 
-                        solidHeader = TRUE,
+                        title = tagList(shiny::icon("chart-area"), " TV anime score density by decade"),
+                        width = 8,
+                        status = "warning",
                         collapsible = TRUE,
                         plotlyOutput("score_density_dec")
                     ),
                     
                     # Checkboxes pour chaque décennie
                     box(
-                        title = "Controls",
+                        title = tagList(shiny::icon("gear"), "Controls"),
                         width = 4,
                         status = "warning",
                         solidHeader = TRUE,
@@ -112,20 +184,46 @@ ui <- dashboardPage(
                         )
                     )
                 ),
-                    
+            
             ),
             
             
             tabItem(tabName = "movies",
-                    h2("Movies dashboard"),
+                    
+                    # Value box
+                    fluidRow(
+                        valueBoxOutput("nb_movie_box")
+                    ),
+                    
+                    # Score moyen par année + classification par décennie
+                    fluidRow(
+                        # Score moyen par année
+                        box(
+                            title = tagList(shiny::icon("chart-line"), " Average score per year"),
+                            status = "primary",
+                            solidHeader = TRUE,
+                            collapsible = TRUE,
+                            plotlyOutput("score_year_movie")
+                        ),
+                        
+                        # Classification par décennie
+                        box(
+                            title = tagList(shiny::icon("chart-line"), " Ratings evolution during decades"),
+                            status = "primary",
+                            solidHeader = TRUE,
+                            collapsible = TRUE,
+                            plotlyOutput("ratings_movie_decade")
+                        ),
+                        
+                    ),
                     
                     # Graphe densité score par décennie + panel controles
                     fluidRow(
                         # Graphe densité de la distribution des notes par décennie
                         box(
-                            title = "Title plot 2", 
+                            title = tagList(shiny::icon("chart-area"), " Movies score density by decade"), 
                             width = 8, 
-                            status = "primary", 
+                            status = "success", 
                             solidHeader = TRUE,
                             collapsible = TRUE,
                             plotlyOutput("score_density_movie")
@@ -133,9 +231,9 @@ ui <- dashboardPage(
                     
                     # Checkboxes pour chaque décennie
                         box(
-                            title = "Controls",
+                            title = tagList(shiny::icon("gear"), "Controls"),
                             width = 4,
-                            status = "warning",
+                            status = "success",
                             solidHeader = TRUE,
                             "Choose decade to show", # br(), "More box content",
                             checkboxGroupInput(
@@ -163,16 +261,38 @@ ui <- dashboardPage(
             ),
             
             
+            
+            tabItem(tabName = "users",
+                    
+                    # Boxplots
+                    fluidRow(
+                        tabBox(
+                            title = "Age and days spent by gender", width = 4,
+                            tabPanel("Age", plotlyOutput("box_gender_age")),
+                            tabPanel("Days spent", plotlyOutput("box_gender_spent"))
+                        ),
+                        
+                        # Nuage de points age utilisateurs
+                        box(
+                            title = tagList(shiny::icon("chart-scatter"), " Anime watchers' age"),
+                            width = 8,
+                            status = "primary",
+                            solidHeader = TRUE,
+                            collapsible = TRUE,
+                            plotlyOutput("scatter_age")
+                        ),
+                    ),
+            ),
+            
+        
     
             tabItem(tabName = "list_anime",
-                h2("List of anime"),
-                
-                # 2 onglet, 1 pour chaque liste à afficher (animes, utilisateurs)
+                # 2 onglets, 1 pour chaque liste à afficher (animes, utilisateurs)
                 fluidRow(
                     tabBox(
                         title = "Data", width = 12,
-                        tabPanel("Anime list", DT::dataTableOutput("data_anime")),
-                        tabPanel("User list", DT::dataTableOutput("data_users"))
+                        tabPanel(tagList(shiny::icon("list"), "Anime list"), DT::dataTableOutput("data_anime")),
+                        tabPanel(tagList(shiny::icon("list"), "User list"), DT::dataTableOutput("data_users"))
                     )
                 )
             )
