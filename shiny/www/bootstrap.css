@@ -1,15 +1,19 @@
-.sidebar-menu, .logo{
+header, #sidebarItemExpanded{
 	position: fixed !important;
+}
+
+#sidebarItemExpanded{
+	width: 230px;
+}
+
+.main-header{
+	width: 100%;
 }
 
 .container-fluid{
 	padding: 0;
 }
 
-.sidebar-menu {
-	display: contents;
-}
-
-.sidebar-menu li{
-	width: 100%;
+.content{
+	padding-top: 60px;
 }

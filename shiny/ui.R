@@ -70,11 +70,13 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                         fluidRow(
                             box(
                                 title = tagList(shiny::icon("chart-scatter"), " Relationship between Score and Scored_by"),
+                                id = "rela",
                                 width = 12,
+                                height = 700,
                                 status = "primary",
                                 solidHeader = TRUE,
                                 collapsible = TRUE,
-                                plotlyOutput("rs_score_notes")
+                                plotlyOutput("rs_score_notes", height=600)
                             ),
                             
                             
