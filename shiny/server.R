@@ -91,7 +91,7 @@ shinyServer(function(input, output) {
   
   # Pie chart type
   output$pie_type <- renderHighchart({
-    df_anime %>% 
+    data_pie_type <- df_anime %>% 
       filter(type != "Unknown") %>% 
       group_by("Type" = type) %>% 
       summarise(Freq = n())

@@ -1,0 +1,15 @@
+.sidebar-menu, .logo{
+	position: fixed !important;
+}
+
+.container-fluid{
+	padding: 0;
+}
+
+.sidebar-menu {
+	display: contents;
+}
+
+.sidebar-menu li{
+	width: 100%;
+}
