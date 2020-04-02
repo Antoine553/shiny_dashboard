@@ -1,6 +1,5 @@
 library(shiny)
 library(shinydashboard)
-# library(shinydashboardPlus)
 
 shinyUI(fluidPage(theme = "bootstrap.css",
     ui <- dashboardPage(
@@ -27,7 +26,8 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                         # Value box
                         fluidRow(
                             valueBoxOutput("nb_box"),
-                            valueBoxOutput("nb_genres")
+                            valueBoxOutput("most_represented_genre"),
+                            valueBoxOutput("nb_users"),
                         ),
                         
                         fluidRow(
@@ -94,7 +94,9 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                         
                     # Value box
                     fluidRow(
-                        valueBoxOutput("nb_tv_box")
+                        valueBoxOutput("nb_tv_box"),
+                        valueBoxOutput("pop_tv"),
+                        valueBoxOutput("tv_most_ep")
                     ),
                     
                     # Score moyen par année + classification par décennie
@@ -180,7 +182,9 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                         
                         # Value box
                         fluidRow(
-                            valueBoxOutput("nb_movie_box")
+                            valueBoxOutput("nb_movie_box"),
+                            valueBoxOutput("pop_movie"),
+                            valueBoxOutput("longest_movie")
                         ),
                         
                         # Score moyen par année + classification par décennie
@@ -252,10 +256,18 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                 
                 tabItem(tabName = "users",
                         
+                        # Value box
+                        fluidRow(
+                            valueBoxOutput("avg_age_users"),
+                            valueBoxOutput("median_days_spent"),
+                            valueBoxOutput("median_completed")
+
+                        ),
+                        
                         # Boxplots
                         fluidRow(
                             tabBox(
-                                title = "Age and days spent by gender", 
+                                title = "Age and days spent by users' gender", 
                                 width = 4, height = 700,
                                 tabPanel("Age", plotlyOutput("box_gender_age", height = 600)),
                                 tabPanel("Days spent", plotlyOutput("box_gender_spent", height = 600))

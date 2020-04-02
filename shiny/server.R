@@ -11,7 +11,6 @@ library(lubridate)
 library(highcharter)
 library(shiny)
 library(shinydashboard)
-library(shinydashboardPlus)
 
 # Chargement des dataset
 df_anime <- fread(file='../datasets/anime_filtered.csv')
@@ -41,15 +40,22 @@ date_data <- df_anime %>%
   ) %>% 
   arrange(year, month)
 
-genres <- unique(unlist(str_split(df_anime$genre, ", ")))
-bar_genres = table("Genre" = genres) %>% as.data.frame() %>% arrange(-Freq)
-
-
 # Valeur médiane pour les boxplots
 median_val <- df_anime %>% 
   select(scored_by, score) %>% 
   filter(scored_by > 99) %>% 
   summarize(median_sc = median(score))
+
+# Extraire durée en minutes
+duration_data <- df_anime %>% 
+  mutate(h = if_else(str_detect(duration, "[0-9]*(?= hr.)"),
+                         as.numeric(str_extract(duration, "[0-9]*(?= hr.)")), 0),
+         m = if_else(str_detect(duration, "[0-9]*(?= min.)"),
+                           as.numeric(str_extract(duration, "[0-9]*(?= min.)")), 0),
+         s = if_else(str_detect(duration, "[0-9]*(?= sec.)"),
+                           as.numeric(str_extract(duration, "[0-9]*(?= sec.)")), 0),
+         duration = h*60 + m + s/60,
+         duration = na_if(duration, 0))
 
 
 shinyServer(function(input, output) {
@@ -63,31 +69,97 @@ shinyServer(function(input, output) {
   
   output$nb_tv_box <- renderValueBox({
     valueBox(
-      paste(format(nrow(df_anime %>% filter(type == 'TV'))), 'TV animes'), icon = icon("play"),
-      "Number of anime series"
+      nrow(df_anime %>% filter(type == 'TV')), icon = icon("play"),
+      "Anime series"
     )
   })
   
   output$nb_movie_box <- renderValueBox({
     valueBox(
-      paste(format(nrow(df_anime %>% filter(type == 'Movie'))), 'Movies'), icon = icon("film"),
-      "Number of anime movies"
+      nrow(df_anime %>% filter(type == 'Movie')), icon = icon("film"),
+      "Anime movies"
     )
   })
   
-  output$nb_genres <- renderValueBox({
+  output$most_represented_genre <- renderValueBox({
+    
+    genre_1 <- unlist(str_split(df_anime$genre, ", ")) %>%
+      table("Genre" = tot_genres) %>% as.data.frame() %>% arrange(-Freq) %>% slice(1)
+    
     valueBox(
-      length(unique(unlist(str_split(df_anime$genre, ", ")))), icon = icon("list"),
-      color = "yellow", "Number of genres"
+      genre_1$Genre, icon = icon("list"),
+      color = "yellow", "Most represented genre of anime."
     )
   })
   
-  output$nb_genres <- renderValueBox({
+  output$nb_users <- renderValueBox({
     valueBox(
-      length(unique(unlist(str_split(df_anime$genre, ", ")))), icon = icon("list"),
-      color = "yellow", "Number of genres"
+      nrow(users), icon = icon("user"),
+      color = "purple", "Users of MyAnimeList.net (in the dataset)"
     )
   })
+  
+  output$tv_most_ep <- renderValueBox({
+    most_ep_tv <- df_anime %>% filter(type == "TV") %>% arrange(-episodes) %>% slice(1)
+    valueBox(
+      paste0(most_ep_tv$episodes, " eps"), icon = icon("list"),
+      color = "purple", paste0(most_ep_tv$title, " is the anime with the most episodes.")
+    )
+  })
+  
+  output$pop_tv <- renderValueBox({
+    most_pop_tv <- df_anime %>% 
+      filter(type == "TV", popularity != 0) %>% 
+      arrange(popularity) %>% slice(1)
+    
+    valueBox(
+      most_pop_tv$title, icon = icon("star"), 
+      color = "yellow", paste0("Most popular anime serie (global rank: ", most_pop_tv$rank, ")")
+    )
+  })
+  
+  output$longest_movie <- renderValueBox({
+    duration_movie <- duration_data %>% filter(type == "Movie") %>% arrange(-duration) %>% slice(1)
+    valueBox(
+      paste0(duration_movie$duration, " minutes"), icon = icon("clock"),
+      color = "purple",  paste0(duration_movie$title, " is the longest anime movie.")
+    )
+  })
+  
+  output$pop_movie <- renderValueBox({
+    most_pop_movie <- df_anime %>% 
+      filter(type == "Movie", popularity != 0) %>% 
+      arrange(popularity) %>% slice(1)
+    
+    valueBox(
+      most_pop_movie$title_english, icon = icon("star"), 
+      color = "yellow", paste0("Most popular anime movie (global rank: ", most_pop_movie$rank, ")")
+    )
+  })
+  
+  output$avg_age_users <- renderValueBox({
+    valueBox(
+      round(mean(users[users$age != 0 & users$age != 80]$age, rm.na = TRUE), 2), 
+      icon = icon("user"), "Average age of users."
+    )
+  })
+  
+  output$median_days_spent <- renderValueBox({
+    valueBox(
+      paste0(round(median(users$user_days_spent_watching, rm.na = TRUE), 2), " days"), 
+      icon = icon("clock"), color = "yellow", 
+      "Median users' time spent watching anime."
+    )
+  })
+  
+  output$median_completed <- renderValueBox({
+    valueBox(
+      round(median(users$user_completed, rm.na = TRUE), 2), 
+      color = "green", icon = icon("check"), 
+      "Median users' completed anime."
+    )
+  })
+  
   
   # Pie chart type
   output$pie_type <- renderHighchart({
@@ -106,7 +178,7 @@ shinyServer(function(input, output) {
   # Bubble chart rang et popularité
   output$bbl_chart_pop <- renderPlotly({
     df_anime[df_anime$popularity != 0] %>% 
-      arrange(rank) %>% head(n = 100) %>%
+      arrange(rank) %>% head(n = input$slider_popularity) %>%
       select(popularity, rank, title, scored_by, favorites, score) %>%
       filter(popularity <= 100) %>%
       mutate(point = (as.numeric(scored_by) * as.numeric(favorites) * as.numeric(score)) / 10^10) %>% 
@@ -133,7 +205,7 @@ shinyServer(function(input, output) {
   # Point plot rang et popularité
   output$point_plot_pop <- renderPlotly({
     df_anime[df_anime$popularity != 0] %>%
-      arrange(popularity) %>% head(n = 100) %>% 
+      arrange(popularity) %>% head(n = input$slider_popularity) %>% 
       select(title, popularity, rank) %>%
       ggplot(aes(x = popularity, y = rank)) +
       geom_line(color = 'black') +
