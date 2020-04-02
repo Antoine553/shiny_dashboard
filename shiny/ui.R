@@ -65,43 +65,28 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                                 DT::dataTableOutput("top_anime_score")
                             )
                         ),
-                        
-                        # Affichage du graphe de relation entre le score et le nombre de notes attribuées
-                        fluidRow(
-                            box(
-                                title = tagList(shiny::icon("chart-scatter"), " Relationship between Score and Scored_by"),
-                                id = "rela",
-                                width = 12,
-                                height = 700,
-                                status = "primary",
-                                solidHeader = TRUE,
-                                collapsible = TRUE,
-                                plotlyOutput("rs_score_notes", height=600)
-                            ),
-                            
-                            
-                        ),
+                    
                         
                         # Boxplots
                         fluidRow(
-                            # Score par source
-                            box(
-                                title = "Score Distribution by Source",
-                                status = "primary",
-                                solidHeader = TRUE,
-                                collapsible = TRUE,
-                                plotlyOutput("score_source")
+                            # Score par type et par source
+                            tabBox(
+                                title = "Score distribution", width = 6, height = 600,
+                                tabPanel(title = "By type", plotlyOutput("score_type", height = 550)),
+                                tabPanel(title = "By source", plotlyOutput("score_source", height = 550))
                             ),
                             
-                            # Score par type
+                            # Affichage du graphe de relation entre le score et le nombre de notes attribuées
                             box(
-                                title = "Score Distribution by Type",
+                                title = tagList(shiny::icon("chart-scatter"), " Relationship between Score and Scored_by"),
+                                id = "rela",
+                                width = 6, height = 600,
                                 status = "primary",
                                 solidHeader = TRUE,
                                 collapsible = TRUE,
-                                plotlyOutput("score_type")
+                                plotlyOutput("rs_score_notes", height = 550)
                             )
-                        ),
+                        )
                         
                 ),
                 
@@ -138,9 +123,9 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                     fluidRow(
                         # Affichage du bubble chart et du point plot via 2 onglets
                         tabBox(
-                            title = "TOP 100 anime", width = 8,
-                            tabPanel(tagList(shiny::icon("chart-scatter"), "Bubble chart"), plotlyOutput("bbl_chart_pop")),
-                            tabPanel(tagList(shiny::icon("chart-line"), "Line plot"), plotlyOutput("point_plot_pop"))
+                            title = "TOP 100 anime", width = 8, height = 600,
+                            tabPanel(tagList(shiny::icon("chart-scatter"), "Bubble chart"), plotlyOutput("bbl_chart_pop", height = 500)),
+                            tabPanel(tagList(shiny::icon("chart-line"), "Line plot"), plotlyOutput("point_plot_pop", height = 500))
                         ),
                         
                         # Slider input pour modifier les graphes en fonction de la popularité
@@ -270,19 +255,20 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                         # Boxplots
                         fluidRow(
                             tabBox(
-                                title = "Age and days spent by gender", width = 4,
-                                tabPanel("Age", plotlyOutput("box_gender_age")),
-                                tabPanel("Days spent", plotlyOutput("box_gender_spent"))
+                                title = "Age and days spent by gender", 
+                                width = 4, height = 700,
+                                tabPanel("Age", plotlyOutput("box_gender_age", height = 600)),
+                                tabPanel("Days spent", plotlyOutput("box_gender_spent", height = 600))
                             ),
                             
                             # Nuage de points age utilisateurs
                             box(
                                 title = tagList(shiny::icon("chart-scatter"), " Anime watchers' age"),
-                                width = 8,
+                                width = 8, height = 700,
                                 status = "primary",
                                 solidHeader = TRUE,
                                 collapsible = TRUE,
-                                plotlyOutput("scatter_age")
+                                plotlyOutput("scatter_age", height = 600)
                             ),
                         ),
                 ),

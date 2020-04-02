@@ -125,9 +125,9 @@ shinyServer(function(input, output) {
       ) +
       scale_y_continuous(
         limits = c(-5, 100),
-        breaks = seq(0, 100, 10)
+        breaks = seq(0, 100, 25)
       ) +
-      labs(title = 'In Terms Of Rank And Popularity TOP 100 Animes', x = 'Rank', y = 'Popularity')
+      labs(x = 'Rank', y = 'Popularity')
   })
   
   # Point plot rang et popularité
@@ -402,7 +402,7 @@ shinyServer(function(input, output) {
   output$scatter_age <- renderPlotly({
     users %>%
       ggplot(aes(x = age, y = user_days_spent_watching, color = gender)) +
-      stat_bin_hex(bins = 100)  +
+      stat_bin_hex(bins = 75, alpha = 0.6)  +
       scale_color_manual(values= c('red', 'blue')) +
       theme_ipsum() +
       theme(
