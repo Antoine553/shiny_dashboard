@@ -84,7 +84,7 @@ shinyServer(function(input, output) {
   output$most_represented_genre <- renderValueBox({
     
     genre_1 <- unlist(str_split(df_anime$genre, ", ")) %>%
-      table("Genre" = tot_genres) %>% as.data.frame() %>% arrange(-Freq) %>% slice(1)
+      table("Genre" = .) %>% as.data.frame() %>% arrange(-Freq) %>% slice(1)
     
     valueBox(
       genre_1$Genre, icon = icon("list"),

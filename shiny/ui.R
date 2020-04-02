@@ -72,8 +72,8 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                             # Score par type et par source
                             tabBox(
                                 title = "Score distribution", width = 6, height = 600,
-                                tabPanel(title = "By type", plotlyOutput("score_type", height = 550)),
-                                tabPanel(title = "By source", plotlyOutput("score_source", height = 550))
+                                tabPanel(title = "By type", plotlyOutput("score_type", height = 500)),
+                                tabPanel(title = "By source", plotlyOutput("score_source", height = 500))
                             ),
                             
                             # Affichage du graphe de relation entre le score et le nombre de notes attribuées
@@ -84,7 +84,7 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                                 status = "primary",
                                 solidHeader = TRUE,
                                 collapsible = TRUE,
-                                plotlyOutput("rs_score_notes", height = 550)
+                                plotlyOutput("rs_score_notes", height = 530)
                             )
                         )
                         
