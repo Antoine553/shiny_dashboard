@@ -450,5 +450,21 @@ shinyServer(function(input, output) {
       arrange(rank)
   })
   
+  output$anime_downloadCSV <- downloadHandler(
+    filename <- "anime_data.csv",
+    content <- function(file) {
+      write.csv(df_anime, file)
+    },
+    contentType = "text/csv"
+  )
+  
+  output$users_downloadCSV <- downloadHandler(
+    filename <- "users_data.csv",
+    content <- function(file) {
+      write.csv(df_users, file)
+    },
+    contentType = "text/csv"
+  )
+  
   
 })

@@ -282,7 +282,9 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                             title = "Data", width = 12,
                             tabPanel(tagList(shiny::icon("list"), "Anime list"), DT::dataTableOutput("data_anime")),
                             tabPanel(tagList(shiny::icon("list"), "User list"), DT::dataTableOutput("data_users"))
-                        )
+                        ),
+                        downloadButton("anime_downloadCSV", "Download anime data as CSV"),
+                        downloadButton("users_downloadCSV", "Download users data as CSV")
                     )
                 )
                 
