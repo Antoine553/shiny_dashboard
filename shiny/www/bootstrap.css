@@ -1,0 +1,19 @@
+header, #sidebarItemExpanded{
+	position: fixed !important;
+}
+
+#sidebarItemExpanded{
+	width: 230px;
+}
+
+.main-header{
+	width: 100%;
+}
+
+.container-fluid{
+	padding: 0;
+}
+
+.content{
+	padding-top: 60px;
+}
