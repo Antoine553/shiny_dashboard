@@ -1,8 +1,8 @@
 # Chargement des librairies
 library(tidyverse)
-library(knitr)
-library(rmarkdown)
-library(markdown)
+#library(knitr)
+#library(rmarkdown)
+#library(markdown)
 library(data.table)
 library(plotly)
 library(viridis)

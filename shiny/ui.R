@@ -1,5 +1,13 @@
+library(tidyverse)
+#library(knitr)
+#library(rmarkdown)
+#library(markdown)
+library(data.table)
+library(plotly)
+library(highcharter)
 library(shiny)
 library(shinydashboard)
+
 
 shinyUI(fluidPage(theme = "bootstrap.css",
     ui <- dashboardPage(
