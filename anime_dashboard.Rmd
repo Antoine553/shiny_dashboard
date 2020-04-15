@@ -1,0 +1,1284 @@
+---
+title: "MAL" 
+output: 
+  flexdashboard::flex_dashboard:
+  source_code: embed
+vertical_layout: scroll
+theme: yeti
+---
+
+```{r, echo = F, warning = F, message = F, include=F}
+# packages
+library(tidyverse)
+library(plotly)
+library(highcharter)
+library(flexdashboard)
+library(crosstalk)
+library(DT)
+library(data.table)
+
+# highcharter default theme change
+options(highcharter.theme = hc_theme_538())
+```
+
+
+```{r, include=F}
+# data importation
+data = read.csv(file = "datasets/anime_filtered.csv",
+                sep = ",",
+                stringsAsFactors = F)
+```
+
+```{r, include=F}
+# dropping unused columns
+data = data %>% 
+  select(-title_synonyms, -status, -airing, -aired_string, -background, -premiered, 
+         -broadcast, -related, -producer, -licensor, -opening_theme, -ending_theme)
+
+# MyAnimeList changed his website structure, adapting the image URL
+data = data %>% 
+  mutate(image_url = str_replace(image_url, "myanimelist.cdn-dena.com", "cdn.myanimelist.net"))
+
+# Some animes have wrong image path (detected while working on data, this list isn't complete)
+data$image_url[data$title == "Steins;Gate 0"] = "https://cdn.myanimelist.net/images/anime/1375/93521.jpg"
+
+data$type = as.factor(data$type)
+data$rating = as.factor(data$rating)
+```
+
+
+```{r, include=F}
+# Extracting start date, year, month, season, decade from aired
+# Anime seasons follow TV seasons and are 3 months long in Japan
+data = data %>% 
+  rowwise() %>% 
+  mutate(aired = str_extract_all(aired, "(None|[0-9]*-[0-9]+-[0-9]+)")[[1]][1]) %>% 
+  ungroup()
+
+data = data %>% 
+  mutate(year = as.integer(if_else(nchar(aired) == 10, substr(aired, 1, 4), NULL)),
+         month = as.integer(if_else(nchar(aired) == 10, substr(aired, 6, 7), NULL)),
+         season = if_else(month %in% c(1:3), "Winter",
+                          if_else(month %in% c(4:6), "Spring",
+                                  if_else(month %in% c(7:9), "Summer", 
+                                          if_else(month %in% c(10:12), "Autumn", NULL)))),
+         year_season = paste(year, season),
+         decade = as.factor(if_else(!is.na(year), 
+                                    paste(substr(year, 1, 3), "0's", sep = ""),
+                                    NULL))) %>% 
+  arrange(year, month)
+
+# Extracting duration in minutes and creating duration classes
+data = data %>% mutate(hours = if_else(str_detect(duration, "[0-9]*(?= hr.)"),
+                                       as.numeric(str_extract(duration, "[0-9]*(?= hr.)")),
+                                       0),
+                       minutes = if_else(str_detect(duration, "[0-9]*(?= min.)"),
+                                         as.numeric(str_extract(duration, "[0-9]*(?= min.)")),
+                                         0),
+                       seconds = if_else(str_detect(duration, "[0-9]*(?= sec.)"),
+                                         as.numeric(str_extract(duration, "[0-9]*(?= sec.)")),
+                                         0),
+                       duration = hours*60 + minutes + seconds/60,
+                       duration = na_if(duration, 0)) %>% 
+  select(-hours, -minutes, -seconds)
+
+data$duration_class = cut(data$duration, c(0, 5, 15, 30, 45, 60, 120, Inf), 
+                          labels = c("Less than 5 minutes", "Between 6 and 15 minutes", "Between 16 and 30 minutes", 
+                                     "Between 31 and 45 minutes", "Between 46 and 60 minutes", "Between 1 and 2 hours", "More than 2 hours"), 
+                          include.lowest = T)
+data$duration_class = factor(data$duration_class, levels = c(levels(data$duration_class), "Unknown"))
+data$duration_class[is.na(data$duration_class)] = "Unknown"
+```
+
+
+```{r, echo = F, include=F}
+# Unavailable genres are coded as "Unknown"
+data[data$genre == "", "genre"] = "Unknown"
+
+# Extracting list of unique genres
+a = data$genre
+tot_genres = unlist(str_split(a, ", "))
+liste_genres = unique(tot_genres)
+```
+
+
+```{js}
+$('.navbar-inverse').removeClass('navbar-inverse').addClass('navbar-default');
+```
+
+.colored {
+  background-color: #FAFAFA;
+}
+
+.bgcolored {
+  background-color: #CCCCCC;
+}
+
+.navbar-brand {
+  visibility: hidden;
+}
+
+.navbar-header {
+  display: none;
+}
+
+th {
+  padding:0 15px 0 15px;
+}
+
+.imgw {
+  transition: transform .2s;
+}
+
+.imgw:hover {
+  transform: scale(1.1); 
+}
+
+.infox {
+  background-color: #e7f3fe;
+    border-left: 6px solid #2196F3;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.closebtn {
+  margin-left: 15px;
+  color: black;
+  font-weight: bold;
+  float: right;
+  font-size: 22px;
+  line-height: 20px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+
+
+
+Presentation {data-icon="fa-home" data-orientation=rows}
+===========================================================
+  
+  Row {data-height=700}
+-----------------------------------------------------------
+  
+### presentation txt {.no-title .no-padding}
+  
+  Presentation
+
+This is a dashboard about animes (TV, Movies, and others). You can find out details about anime types, genres, evolution, scores, etc. If the first tab gives a first insight of anime world, the two next ones focus on the two main anime types : TV and Movies. The last tab allows you to examine the different anime studios separately.
+
+Check out the "about" tab to know the data sources, inspirations, acknowledgements and tools used here.
+
+The dashboard is fully interactive, do not hesitate to put your mouse on visualisations and try to click on Anime photos to be redirected to the MyAnimeList's anime page!
+
+**Please enjoy your visit here, and don't hesitate to ask questions in comments!**
+  
+  
+  ![](https://www.elsetge.cat/myimg/f/43-433162_wallpaper-simple-background-princess-mononoke-no-background.jpg){height=320px}
+
+
+
+
+Overview {data-orientation=columns data-icon="fa-eye"}
+===========================================================
+  
+  Column {.colored}
+-----------------------------------------------------------
+  
+### Anime types {.no-title .no-padding}
+  
+```{r fig.height=2.5}
+data_pie_type = data %>% 
+  filter(type != "Unknown") %>% 
+  group_by("Type" = type) %>% 
+  summarise(Freq = n())
+
+highchart() %>% 
+  hc_add_series(data_pie_type,
+                hcaes(x = Type,
+                      y = Freq,
+                      color = Type),
+                type = "pie") %>% 
+  hc_tooltip(borderWidth = 1.5,
+             headerFormat = "",
+             pointFormat = paste("Type: {point.Type} ({point.percentage:.1f}%)Count: {point.y}")) %>% 
+  hc_title(text = "Anime types repartition")
+```
+
+### Duration x Type {.no-title .no-padding}
+
+```{r fig.height=3}
+data_col_type_duration_class = data %>% 
+  filter(type != "Unknown", duration_class != "Unknown") %>% 
+  group_by(type, duration_class) %>% 
+  summarise(Freq = n())
+
+highchart() %>% 
+  hc_add_series(data_col_type_duration_class,
+                hcaes(x = type,
+                      y = Freq,
+                      group = duration_class),
+                type = "column") %>% 
+  hc_title(text = "Anime duration per type") %>% 
+  hc_xAxis(categories = levels(data_col_type_duration_class$type), 
+           labels = list(style = list(fontSize = 8))) %>% 
+  hc_yAxis(title = list(text = "Count")) %>% 
+  hc_tooltip(useHTML = T,
+             borderWidth = 1.5,
+             headerFormat = "",
+             pointFormat = paste("{point.type}
+                                   
+                                   {point.duration_class}
+                                   {point.y}")) %>% 
+  hc_legend(enabled = F)
+```
+
+### evolution {.no-title .no-padding}
+
+```{r fig.height=2.5}
+data_line_year = data %>% 
+  filter(!is.na(year)) %>% 
+  group_by("Year" = year) %>% 
+  summarise(Freq = n())
+
+highchart() %>% 
+  hc_add_series(data_line_year,
+                hcaes(x = Year,
+                      y = Freq,
+                      color = Freq),
+                type = "line") %>% 
+  hc_title(text = "Number of animes per year") %>% 
+  hc_xAxis(title = list(text = "Year")) %>% 
+  hc_yAxis(title = list(text = "Count")) %>% 
+  hc_tooltip(useHTML = T,
+             borderWidth = 1.5,
+             headerFormat = "",
+             pointFormat = paste("{point.Year}
+                                   
+                                   {point.Freq} animes")) %>% 
+  hc_legend(enabled = F)
+```
+
+
+Column {.colored} 
+-----------------------------------------------------------
+  
+  
+  
+### animes (TV, movies, ONA, OVA, etc.) from 1917 to 2018 {.no-padding}
+```{r fig.height=0.4}
+nb_anime <- format(nrow(data), big.mark = ",")
+
+valueBox(nb_anime, icon = "fa-play", color = '#968fff')
+```
+
+### Genres repartition {.no-title .no-padding}
+
+```{r}
+data_bar_genres = table("Genre" = tot_genres) %>% 
+  as.data.frame() %>% 
+  arrange(-Freq)
+
+
+highchart() %>% 
+  hc_add_series(data_bar_genres,
+                hcaes(x = Genre,
+                      y = Freq,
+                      color = Freq),
+                type = "bar") %>% 
+  hc_title(text = "Anime genres") %>% 
+  hc_xAxis(categories = data_bar_genres$Genre, 
+           labels = list(style = list(fontSize = 12)),
+           min = 0,
+           max = 15,
+           scrollbar = list(enabled = T)) %>% 
+  hc_yAxis(title = list(text = "Count"),
+           min = 0,
+           max = 5500) %>% 
+  hc_tooltip(useHTML = T,
+             borderWidth = 1.5,
+             headerFormat = "",
+             pointFormat = paste("{point.Genre}
+                                   
+                                   {point.Freq} animes")) %>% 
+  hc_plotOptions(bar = list(stacking = "normal", 
+                            pointPadding = 0, 
+                            groupPadding = 0, 
+                            borderWidth = 2,
+                            borderColor = "#DBDBDB")) %>%
+  hc_legend(enabled = FALSE)
+```
+
+
+
+### Most popular anime {.no-title .bgcolored .no-padding}
+
+```{r, include=F}
+data_most_popular = data %>%
+  filter(popularity == 1) %>%
+  select(anime_id, title, image_url, score, members) %>% 
+  mutate(url_mal = paste("https://myanimelist.net/anime/", anime_id, sep = ""))
+
+data_most_liked = data %>%
+  filter(rank == 1) %>%
+  select(anime_id, title, image_url, score, members) %>% 
+  mutate(url_mal = paste("https://myanimelist.net/anime/", anime_id, sep = ""))
+```
+
+
+
+
+
+
+Most popular anime 
+Most liked anime 
+
+
+`r data_most_popular$title`  
+`r data_most_liked$title`  
+
+
+
+[![](`r data_most_popular$image_url`){height=240px .imgw}](`r data_most_popular$url_mal`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."}
+
+
+[![](`r data_most_liked$image_url`){height=240px .imgw}](`r data_most_liked$url_mal`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+
+`r format(data_most_popular$members, big.mark = ",")` members  
+`r format(data_most_liked$members, big.mark = ",")` members 
+
+
+`r data_most_popular$score`/10 
+`r data_most_liked$score`/10  
+
+
+
+
+
+
+TV Anime {data-orientation=rows data-icon="fa-tv"}
+===========================================================
+  
+```{r, include=F}
+data_anime_tv = data %>% 
+  filter(type == "TV")
+```
+
+
+Row
+-----------------------------------------------------------
+  
+```{r, include=F}
+data_most_episodes = data_anime_tv %>% 
+  arrange(-episodes) %>% 
+  slice(1)
+
+nb_anime_tv = nrow(data_anime_tv)
+
+time_anime_watch = round(sum(data_anime_tv$episodes * data_anime_tv$duration, na.rm = T)/60/24/30.33/12, 0)
+```
+
+
+### from 1917 to 2018
+
+```{r}
+valueBox(paste(format(nb_anime_tv, big.mark = ","), "TV animes"),
+         icon = "fa-database", color = '#ffdc8f')
+```
+
+### `r data_most_episodes$title` is the #1 Anime with the most episodes
+
+```{r}
+valueBox(paste(format(data_most_episodes$episodes, big.mark = ","), "eps"),
+         icon = "fa-list", color = '#8fa7ff')
+```
+
+### to watch every episode of every TV anime
+
+```{r}
+valueBox(paste(time_anime_watch, "years"),
+         icon = "fa-clock", color = '#8fff93')
+```
+
+
+
+Row 
+-----------------------------------------------------------
+  
+### Avg score per year {.no-title .no-padding}
+```{r, fig.width= 5}
+data_line_score_avg = data_anime_tv %>% 
+  filter(score != 0, scored_by > 10) %>% 
+  group_by("Year" = year) %>% 
+  summarise(avg = round(mean(score, na.rm = T), 2))
+
+highchart() %>% 
+  hc_add_series(data_line_score_avg,
+                hcaes(x = Year,
+                      y = avg,
+                      color = avg),
+                type = "line") %>% 
+  hc_title(text = "Average score per year") %>%
+  hc_xAxis(title = list(text = "Year")) %>% 
+  hc_yAxis(title = list(text = "Average score")) %>% 
+  hc_tooltip(useHTML = T,
+             borderWidth = 1.5,
+             headerFormat = "",
+             pointFormat = paste("{point.Year}
+                                   
+                                   {point.avg}/10")) %>% 
+  hc_legend(enabled = F)
+```
+
+
+
+### rating {.no-title .no-padding}
+
+```{r, fig.width= 5}
+data_bar_rating = data_anime_tv %>%
+  filter(!is.na(decade)) %>% 
+  group_by("Decade" = decade, rating,
+           .drop = F) %>% 
+  summarise(Freq = n())
+
+highchart() %>% 
+  hc_add_series(data_bar_rating,
+                hcaes(x = Decade,
+                      y = Freq,
+                      group = rating),
+                type = "line") %>% 
+  hc_title(text = "Ratings evolution during decades") %>%
+  hc_xAxis(title = list(text = "Decade"),
+           categories = unique(data_bar_rating$Decade)) %>% 
+  hc_yAxis(title = list(text = "Count")) %>% 
+  hc_tooltip(useHTML = T,
+             borderWidth = 1.5,
+             headerFormat = "",
+             pointFormat = paste("
+               {point.rating}
+               
+               {point.Decade}
+               
+               {point.Freq}"))
+```
+
+
+### duration {.no-title .no-padding}
+
+```{r, fig.width= 5}
+data_bar_duration = data_anime_tv %>% 
+  filter(!is.na(duration)) %>% 
+  mutate(duration = ceiling(duration)) %>% 
+  group_by(duration) %>% 
+  summarise(Freq = n())
+
+highchart() %>% 
+  hc_add_series(data_bar_duration,
+                hcaes(x = duration,
+                      y = Freq,
+                      color = duration),
+                type = "column") %>% 
+  hc_title(text = "Anime duration repartition") %>% 
+  hc_xAxis(title = list(text = "Duration (minutes)")) %>% 
+  hc_yAxis(title = list(text = "Count")) %>% 
+  hc_tooltip(useHTML = T,
+             borderWidth = 1.5,
+             headerFormat = "",
+             pointFormat = paste("{point.duration} minutes
+                                   
+                                   {point.Freq} TV animes")) %>% 
+  hc_legend(enabled = F)
+```
+
+
+Row
+-----------------------------------------------------------
+  
+  
+  
+  
+  
+### Episodes {.no-title .no-padding}
+  
+```{r, fig.width= 5, fig.height= 1}
+data_bar_episodes = data_anime_tv %>% 
+  filter(!is.na(episodes), episodes < 110) %>% 
+  group_by(episodes) %>% 
+  summarise(Freq = n())
+
+n_omit_episodes = data_anime_tv %>% 
+  filter(!is.na(episodes), episodes >= 110) %>% 
+  nrow()
+
+highchart() %>% 
+  hc_add_series(data_bar_episodes,
+                hcaes(x = episodes,
+                      y = Freq,
+                      color = episodes),
+                type = "column") %>% 
+  hc_title(text = "Anime episodes repartition") %>% 
+  hc_subtitle(text = paste(n_omit_episodes, "animes have more than 110 episodes and have been removed")) %>% 
+  hc_xAxis(title = list(text = "Episodes")) %>% 
+  hc_yAxis(title = list(text = "Count")) %>% 
+  hc_tooltip(useHTML = T,
+             borderWidth = 1.5,
+             headerFormat = "",
+             pointFormat = paste("{point.episodes} minutes
+                                   
+                                   {point.Freq} TV animes")) %>% 
+  hc_legend(enabled = F)
+```
+
+### density {.no-title .no-padding}
+
+```{r}
+data_anime_clean = data_anime_tv %>% 
+  filter(!is.na(decade), score != 0)
+
+densities = map(unique(data_anime_clean$decade), function(x){
+  dt <- density(data_anime_clean$score[data_anime_clean$decade == x])[1:2]
+  dt <- list_parse2(as.data.frame(dt))
+  list(data = dt, name = x)
+})
+
+highchart() %>% 
+  hc_add_series_list(densities) %>% 
+  hc_title(text = "Score density per decade") %>% 
+  hc_xAxis(title = list(text = "Score"),
+           min = 0,
+           max = 10) %>% 
+  hc_yAxis(title = list(text = "Density")) %>% 
+  hc_tooltip(useHTML = T,
+             borderWidth = 1.5,
+             headerFormat = "",
+             pointFormat = paste("{point.series.name}"))
+
+```
+
+
+Row
+-----------------------------------------------------------
+  
+  
+### Most popular TV animes {.no-title .bgcolored .no-padding}
+```{r, include=F}
+data_anime_tv_most_popular = data_anime_tv %>%
+  filter(popularity != 0) %>% 
+  arrange(popularity) %>% 
+  slice(1:5) %>% 
+  select(anime_id, title, image_url, score, members) %>% 
+  mutate(url_mal = paste("https://myanimelist.net/anime/", anime_id, sep = ""))
+```
+
+
+Most popular animes 
+
+
+`r data_anime_tv_most_popular$title[1]`  
+`r data_anime_tv_most_popular$title[2]`  
+`r data_anime_tv_most_popular$title[3]`  
+`r data_anime_tv_most_popular$title[4]`  
+`r data_anime_tv_most_popular$title[5]`  
+
+
+[![](`r data_anime_tv_most_popular$image_url[1]`){height=200px .imgw}](`r data_anime_tv_most_popular$url_mal[1]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+[![](`r data_anime_tv_most_popular$image_url[2]`){height=200px .imgw}](`r data_anime_tv_most_popular$url_mal[2]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+[![](`r data_anime_tv_most_popular$image_url[3]`){height=200px .imgw}](`r data_anime_tv_most_popular$url_mal[3]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+[![](`r data_anime_tv_most_popular$image_url[4]`){height=200px .imgw}](`r data_anime_tv_most_popular$url_mal[4]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+[![](`r data_anime_tv_most_popular$image_url[5]`){height=200px .imgw}](`r data_anime_tv_most_popular$url_mal[5]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+
+
+#1 
+#2 
+#3 
+#4 
+#5 
+
+
+`r format(data_anime_tv_most_popular$members[1], big.mark = ",")` members 
+`r format(data_anime_tv_most_popular$members[2], big.mark = ",")` members 
+`r format(data_anime_tv_most_popular$members[3], big.mark = ",")` members 
+`r format(data_anime_tv_most_popular$members[4], big.mark = ",")` members 
+`r format(data_anime_tv_most_popular$members[5], big.mark = ",")` members 
+
+
+`r data_anime_tv_most_popular$score[1]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+`r data_anime_tv_most_popular$score[2]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+`r data_anime_tv_most_popular$score[3]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+`r data_anime_tv_most_popular$score[4]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+`r data_anime_tv_most_popular$score[5]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+
+
+
+
+
+
+Row
+-----------------------------------------------------------
+  
+  
+### Most liked TV animes {.no-title .bgcolored .no-padding}
+```{r, include=F}
+data_anime_tv_most_liked = data_anime_tv %>%
+  filter(rank != 0) %>%
+  arrange(rank) %>% 
+  slice(1:5) %>% 
+  select(anime_id, title, image_url, score, members) %>% 
+  mutate(url_mal = paste("https://myanimelist.net/anime/", anime_id, sep = ""))
+```
+
+
+Most liked animes 
+
+
+`r data_anime_tv_most_liked$title[1]`  
+`r data_anime_tv_most_liked$title[2]`  
+`r data_anime_tv_most_liked$title[3]`  
+`r data_anime_tv_most_liked$title[4]`  
+`r data_anime_tv_most_liked$title[5]`  
+
+
+[![](`r data_anime_tv_most_liked$image_url[1]`){height=200px .imgw}](`r data_anime_tv_most_liked$url_mal[1]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+[![](`r data_anime_tv_most_liked$image_url[2]`){height=200px .imgw}](`r data_anime_tv_most_liked$url_mal[2]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+[![](`r data_anime_tv_most_liked$image_url[3]`){height=200px .imgw}](`r data_anime_tv_most_liked$url_mal[3]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+[![](`r data_anime_tv_most_liked$image_url[4]`){height=200px .imgw}](`r data_anime_tv_most_liked$url_mal[4]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+[![](`r data_anime_tv_most_liked$image_url[5]`){height=200px .imgw}](`r data_anime_tv_most_liked$url_mal[5]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+
+
+#1 
+#2 
+#3 
+#4 
+#5 
+
+
+`r format(data_anime_tv_most_liked$members[1], big.mark = ",")` members 
+`r format(data_anime_tv_most_liked$members[2], big.mark = ",")` members 
+`r format(data_anime_tv_most_liked$members[3], big.mark = ",")` members 
+`r format(data_anime_tv_most_liked$members[4], big.mark = ",")` members 
+`r format(data_anime_tv_most_liked$members[5], big.mark = ",")` members 
+
+
+`r data_anime_tv_most_liked$score[1]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+`r data_anime_tv_most_liked$score[2]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+`r data_anime_tv_most_liked$score[3]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+`r data_anime_tv_most_liked$score[4]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+`r data_anime_tv_most_liked$score[5]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+
+
+
+
+
+
+
+
+
+
+
+
+
+Movie {data-orientation=rows data-icon="fa-film"}
+===========================================================
+  
+  
+  
+```{r include=F}
+data_anime_mv = data %>% 
+  filter(type == "Movie")
+```
+
+
+Row
+-----------------------------------------------------------
+  
+```{r include=F}
+data_anime_mv_longest = data_anime_mv %>% 
+  arrange(-duration) %>% 
+  slice(1)
+
+nb_anime_mv = nrow(data_anime_mv)
+
+time_mv_watch = round(sum(data_anime_mv$episodes * data_anime_mv$duration, na.rm = T)/60/24/30.33, 0)
+```
+
+
+### from 1917 to 2018
+
+```{r}
+valueBox(paste(format(nb_anime_mv, big.mark = ","), "Movies"),
+         icon = "fa-database", color = '#ffdc8f')
+```
+
+### `r data_anime_mv_longest$title` is the #1 longest Anime Movie
+
+```{r}
+valueBox(paste(format(data_anime_mv_longest$duration, big.mark = ","), "minutes"),
+         icon = "fa-clock", color = '#d28fff')
+```
+
+### to watch every episode of every Anime Movie
+
+```{r}
+valueBox(paste(time_mv_watch, "months"),
+         icon = "fa-clock", color = '#8fff93')
+```
+
+
+
+
+
+Row 
+-----------------------------------------------------------
+  
+### Avg score per year MV {.no-title .no-padding}
+```{r, fig.width= 5}
+data_line_score_avg_mv = data_anime_mv %>% 
+  filter(score != 0, scored_by > 10) %>% 
+  group_by("Year" = year) %>% 
+  summarise(avg = round(mean(score, na.rm = T), 2))
+
+highchart() %>% 
+  hc_add_series(data_line_score_avg_mv,
+                hcaes(x = Year,
+                      y = avg,
+                      color = avg),
+                type = "line") %>% 
+  hc_title(text = "Average score per year") %>%
+  hc_xAxis(title = list(text = "Year")) %>% 
+  hc_yAxis(title = list(text = "Average score")) %>% 
+  hc_tooltip(useHTML = T,
+             borderWidth = 1.5,
+             headerFormat = "",
+             pointFormat = paste("{point.Year}
+                                   
+                                   {point.avg}/10")) %>% 
+  hc_legend(enabled = F)
+```
+
+
+
+### rating MV {.no-title .no-padding}
+
+```{r, fig.width= 5}
+data_bar_rating_mv = data_anime_mv %>%
+  filter(!is.na(decade)) %>% 
+  group_by("Decade" = decade, rating,
+           .drop = FALSE) %>% 
+  summarise(Freq = n())
+
+highchart() %>% 
+  hc_add_series(data_bar_rating_mv,
+                hcaes(x = Decade,
+                      y = Freq,
+                      group = rating),
+                type = "line") %>% 
+  hc_title(text = "Ratings evolution during decades") %>%
+  hc_xAxis(title = list(text = "Decade"),
+           categories = unique(data_bar_rating_mv$Decade)) %>% 
+  hc_yAxis(title = list(text = "Count")) %>% 
+  hc_tooltip(useHTML = T,
+             borderWidth = 1.5,
+             headerFormat = "",
+             pointFormat = paste("{point.rating}
+               
+               {point.Decade}
+               
+               {point.Freq}"))
+```
+
+
+### duration MV {.no-title .no-padding}
+
+```{r, fig.width= 5}
+data_bar_duration_mv = data_anime_mv %>% 
+  filter(!is.na(duration)) %>% 
+  mutate(duration = ceiling(duration)) %>% 
+  group_by(duration) %>% 
+  summarise(Freq = n())
+
+highchart() %>% 
+  hc_add_series(data_bar_duration_mv,
+                hcaes(x = duration,
+                      y = Freq,
+                      color = duration),
+                type = "column") %>% 
+  hc_title(text = "Movie duration repartition") %>% 
+  hc_xAxis(title = list(text = "Duration (minutes)")) %>% 
+  hc_yAxis(title = list(text = "Count")) %>% 
+  hc_tooltip(useHTML = T,
+             borderWidth = 1.5,
+             headerFormat = "",
+             pointFormat = paste("{point.duration} minutes
+                                   
+                                   {point.Freq} TV animes")) %>% 
+  hc_legend(enabled = F)
+```
+
+
+Row
+-----------------------------------------------------------
+  
+  
+  
+  
+  
+### Episodes 2 {.no-title .no-padding}
+  
+```{r, fig.width= 5, fig.height= 1}
+data_anime_mv_bar_source = data_anime_mv %>% 
+  group_by(source) %>% 
+  summarise(Freq = n()) %>% 
+  arrange(-Freq)
+
+highchart() %>% 
+  hc_add_series(data_anime_mv_bar_source,
+                hcaes(x = source,
+                      y = Freq,
+                      color = Freq),
+                type = "bar") %>% 
+  hc_title(text = "Movie sources") %>% 
+  hc_xAxis(categories = data_anime_mv_bar_source$source, 
+           labels = list(style = list(fontSize = 12))) %>% 
+  hc_yAxis(title = list(text = "Count")) %>% 
+  hc_tooltip(useHTML = T,
+             borderWidth = 1.5,
+             headerFormat = "",
+             pointFormat = paste("{point.source}
+                                   
+                                   {point.Freq} movies")) %>% 
+  hc_plotOptions(bar = list(stacking = "normal", 
+                            pointPadding = 0, 
+                            groupPadding = 0, 
+                            borderWidth = 2,
+                            borderColor = "#DBDBDB")) %>%
+  hc_legend(enabled = FALSE)
+```
+
+### density MV {.no-title .no-padding}
+
+```{r}
+data_anime_clean_mv = data_anime_mv %>% 
+  filter(!is.na(decade), score != 0)
+
+densities_mv = map(unique(data_anime_clean_mv$decade), function(x){
+  dt <- density(data_anime_clean_mv$score[data_anime_clean_mv$decade == x])[1:2]
+  dt <- list_parse2(as.data.frame(dt))
+  list(data = dt, name = x)
+})
+
+highchart() %>% 
+  hc_add_series_list(densities_mv) %>% 
+  hc_title(text = "Score density per decade") %>% 
+  hc_xAxis(title = list(text = "Score"),
+           min = 0,
+           max = 10) %>% 
+  hc_yAxis(title = list(text = "Density")) %>% 
+  hc_tooltip(useHTML = T,
+             borderWidth = 1.5,
+             headerFormat = "",
+             pointFormat = paste("{point.series.name}"))
+
+```
+
+
+Row
+-----------------------------------------------------------
+  
+  
+### Most popular Anime Movies {.no-title .bgcolored .no-padding}
+```{r include=F}
+data_anime_mv_most_popular = data_anime_mv %>%
+  filter(popularity != 0) %>% 
+  arrange(popularity) %>% 
+  slice(1:5) %>% 
+  select(anime_id, title, image_url, score, members) %>% 
+  mutate(url_mal = paste("https://myanimelist.net/anime/", anime_id, sep = ""))
+```
+
+
+Most popular Anime Movies 
+
+
+`r data_anime_mv_most_popular$title[1]`  
+`r data_anime_mv_most_popular$title[2]`  
+`r data_anime_mv_most_popular$title[3]`  
+`r data_anime_mv_most_popular$title[4]`  
+`r data_anime_mv_most_popular$title[5]`  
+
+
+[![](`r data_anime_mv_most_popular$image_url[1]`){height=200px .imgw}](`r data_anime_mv_most_popular$url_mal[1]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+[![](`r data_anime_mv_most_popular$image_url[2]`){height=200px .imgw}](`r data_anime_mv_most_popular$url_mal[2]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+[![](`r data_anime_mv_most_popular$image_url[3]`){height=200px .imgw}](`r data_anime_mv_most_popular$url_mal[3]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+[![](`r data_anime_mv_most_popular$image_url[4]`){height=200px .imgw}](`r data_anime_mv_most_popular$url_mal[4]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+[![](`r data_anime_mv_most_popular$image_url[5]`){height=200px .imgw}](`r data_anime_mv_most_popular$url_mal[5]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+
+
+#1 
+#2 
+#3 
+#4 
+#5 
+
+
+`r format(data_anime_mv_most_popular$members[1], big.mark = ",")` members 
+`r format(data_anime_mv_most_popular$members[2], big.mark = ",")` members 
+`r format(data_anime_mv_most_popular$members[3], big.mark = ",")` members 
+`r format(data_anime_mv_most_popular$members[4], big.mark = ",")` members 
+`r format(data_anime_mv_most_popular$members[5], big.mark = ",")` members 
+
+
+`r data_anime_mv_most_popular$score[1]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+`r data_anime_mv_most_popular$score[2]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+`r data_anime_mv_most_popular$score[3]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+`r data_anime_mv_most_popular$score[4]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+`r data_anime_mv_most_popular$score[5]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+
+
+
+
+
+
+Row
+-----------------------------------------------------------
+  
+  
+### Most liked Anime Movie {.no-title .bgcolored .no-padding}
+```{r include=F}
+data_anime_mv_most_liked = data_anime_mv %>%
+  filter(rank != 0) %>%
+  arrange(rank) %>% 
+  slice(1:5) %>% 
+  select(anime_id, title, image_url, score, members) %>% 
+  mutate(url_mal = paste("https://myanimelist.net/anime/", anime_id, sep = ""))
+```
+
+
+Most liked Anime Movies 
+
+
+`r data_anime_mv_most_liked$title[1]`  
+`r data_anime_mv_most_liked$title[2]`  
+`r data_anime_mv_most_liked$title[3]`  
+`r data_anime_mv_most_liked$title[4]`  
+`r data_anime_mv_most_liked$title[5]`  
+
+
+[![](`r data_anime_mv_most_liked$image_url[1]`){height=200px .imgw}](`r data_anime_mv_most_liked$url_mal[1]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+[![](`r data_anime_mv_most_liked$image_url[2]`){height=200px .imgw}](`r data_anime_mv_most_liked$url_mal[2]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+[![](`r data_anime_mv_most_liked$image_url[3]`){height=200px .imgw}](`r data_anime_mv_most_liked$url_mal[3]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+[![](`r data_anime_mv_most_liked$image_url[4]`){height=200px .imgw}](`r data_anime_mv_most_liked$url_mal[4]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+[![](`r data_anime_mv_most_liked$image_url[5]`){height=200px .imgw}](`r data_anime_mv_most_liked$url_mal[5]`){target="_blank" rel="noopener noreferrer" title="More details on MyAnimeList website..."} 
+
+
+
+#1 
+#2 
+#3 
+#4 
+#5 
+
+
+`r format(data_anime_mv_most_liked$members[1], big.mark = ",")` members 
+`r format(data_anime_mv_most_liked$members[2], big.mark = ",")` members 
+`r format(data_anime_mv_most_liked$members[3], big.mark = ",")` members 
+`r format(data_anime_mv_most_liked$members[4], big.mark = ",")` members 
+`r format(data_anime_mv_most_liked$members[5], big.mark = ",")` members 
+
+
+`r data_anime_mv_most_liked$score[1]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+`r data_anime_mv_most_liked$score[2]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+`r data_anime_mv_most_liked$score[3]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+`r data_anime_mv_most_liked$score[4]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+`r data_anime_mv_most_liked$score[5]`/10 ![](https://image.flaticon.com/icons/svg/148/148841.svg){height=12px} 
+
+
+
+
+
+
+
+
+
+Studio {data-icon="fa-building" data-orientation="rows"}
+===========================================================
+  
+  
+  
+```{r include=F}
+data_dt = data.table(data)
+
+data_dt_expand_studio = data_dt[, list(studio_alone = unlist(strsplit(studio, ", "))), by = names(data_dt)]
+
+freq_studio_type = data_dt_expand_studio %>% 
+  group_by(studio_alone, type,
+           .drop = F) %>% 
+  summarise(Freq = n()) %>% 
+  filter(type != "Unknown")
+
+freq_studio_type$type = factor(freq_studio_type$type, levels = rev(c("TV", "Movie", "OVA", "ONA", "Special", "Music")))
+
+data_dt_expand_studio_genre = data_dt_expand_studio[, list(genre_alone = unlist(strsplit(genre, ", "))), by = names(data_dt_expand_studio)]
+
+freq_studio_genre = data_dt_expand_studio_genre %>% 
+  group_by(studio_alone, genre_alone,
+           .drop = F) %>% 
+  summarise(Freq = n()) %>% 
+  arrange(studio_alone, -Freq)
+
+data_dt_expand_studio_public = data_dt_expand_studio %>% 
+  select(studio_alone, rank, title, image_url, type, episodes, aired, duration, score, scored_by, studio)
+
+# stange img behavior on flexdashboard: I can't directly put the html code (pandoc error 99)
+# here's a dirty workaround
+data_dt_expand_studio_public$image_url = paste0("", sep = "")
+data_dt_expand_studio_public$image_url = stringr::str_replace(data_dt_expand_studio_public$image_url, "xyzxyz", "")
+
+data_dt_expand_studio_public = data_dt_expand_studio_public %>% 
+  arrange(rank)
+
+list_genre_order = freq_studio_genre %>% 
+  group_by(genre_alone) %>% 
+  summarise(genre_sum = sum(Freq)) %>% 
+  arrange(-genre_sum)
+
+freq_studio_genre = freq_studio_genre %>% 
+  filter(!is.na(genre_alone)) %>% 
+  left_join(list_genre_order, by = c("genre_alone" = "genre_alone")) %>% 
+  arrange(-genre_sum)
+
+data_dt_expand_studio_public$studio_alone = factor(data_dt_expand_studio_public$studio_alone)
+freq_studio_genre$studio_alone = factor(freq_studio_genre$studio_alone)
+freq_studio_genre$genre_alone = factor(freq_studio_genre$genre_alone, levels = list_genre_order$genre_alone, ordered = F)
+
+# crosstalk shared data
+shared_data_expand_studio <- SharedData$new(data_dt_expand_studio_public, key = ~studio_alone, group = 'Select a Studio...')
+shared_data_expand_studio_type <- SharedData$new(freq_studio_type, key = ~studio_alone, group = 'Select a Studio...')
+shared_data_expand_studio_genre <- SharedData$new(freq_studio_genre, key = ~studio_alone, group = 'Select a Studio...')
+```
+
+
+Row
+-----------------------------------------------------------
+  
+  
+  
+```{r include=F}
+# preparing 3 plot_ly for subplot
+ply1 = plot_ly(data = shared_data_expand_studio_type,
+               x = ~Freq,
+               y = ~type,
+               color = ~type,
+               text = ~paste(studio_alone, "-", Freq),
+               colors = c("TV" = "#7fc97f",
+                          "Movie" = "#beaed4",
+                          "OVA" = "#fdc086",
+                          "ONA" = "#ffff99",
+                          "Special" = "#386cb0",
+                          "Music" = "#f0027f"),
+               opacity = 0.7,
+               type = "bar",
+               orientation = "h",
+               hovertemplate = "%{text}") %>% 
+  layout(barmode = "stack",
+         xaxis = list(title = "Count"),
+         annotations = list(text = "Anime Types",
+                            font = list(size = 16),
+                            xref = "paper",
+                            yref = "paper",
+                            xanchor = "center",
+                            yanchor = "bottom",
+                            align = "center",
+                            x = 0.45,
+                            y = 1,
+                            showarrow = F),
+         margin = list(l = 5, r = 5, b = 50, t = 30, pad = 1),
+         paper_bgcolor = "#f0f0f0",
+         plot_bgcolor = "#f0f0f0")
+
+ply2 = plot_ly(data = shared_data_expand_studio,
+               x = ~scored_by,
+               y = ~score,
+               color = ~type,
+               text = ~paste("Anime title: ", title, "",
+                             "Studio(s): ", studio, "",
+                             "Score: ", score, "/10 (#", rank, ")",
+                             sep = ""),
+               colors = c("TV" = "#7fc97f",
+                          "Movie" = "#beaed4",
+                          "OVA" = "#fdc086",
+                          "ONA" = "#ffff99",
+                          "Special" = "#386cb0",
+                          "Music" = "#f0027f"),
+               opacity = 0.6,
+               type = "scatter",
+               mode = "markers",
+               hovertemplate = "%{text}") %>% 
+  layout(xaxis = list(range = c(0, (max(data$scored_by)+200000)),
+                      title = "# Reviews"),
+         yaxis = list(title = "Score"),
+         annotations = list(text = "Review Scores",
+                            font = list(size = 16),
+                            xref = "paper",
+                            yref = "paper",
+                            xanchor = "center",
+                            yanchor = "bottom",
+                            align = "center",
+                            x = 0.5,
+                            y = 1,
+                            showarrow = F),
+         margin = list(l = 5, r = 5, b = 50, t = 30, pad = 1),
+         paper_bgcolor = "#f0f0f0",
+         plot_bgcolor = "#f0f0f0")
+
+ply3 = plot_ly(data = shared_data_expand_studio_genre,
+               x = ~Freq,
+               y = ~genre_alone,
+               type = "bar",
+               color = ~genre_alone,
+               text = ~paste(studio_alone, "-", Freq),
+               hovertemplate = "%{text}",
+               orientation = "h") %>%
+  layout(barmode = "stack",
+         yaxis = list(title = "",
+                      tickfont = list(size = 8),
+                      categoryorder = "array",
+                      categoryarray = ~Freq,
+                      autorange = "reversed"),
+         xaxis = list(title = "Count"),
+         annotations = list(text = "Anime Genres",
+                            font = list(size = 16),
+                            xref = "paper",
+                            yref = "paper",
+                            xanchor = "center",
+                            yanchor = "bottom",
+                            align = "center",
+                            x = 0.5,
+                            y = 1,
+                            showarrow = F),
+         margin = list(l = 5, r = 5, b = 50, t = 30, pad = 1),
+         paper_bgcolor = "#f0f0f0",
+         plot_bgcolor = "#f0f0f0")
+```
+
+
+### studio header selectbar {.no-title .colored .no-padding}
+
+```{r}
+filter_select("sc1", "Select a studio:", shared_data_expand_studio, ~studio_alone, allLevels = TRUE, multiple = FALSE)
+```
+
+
+
+**Note:** 5,930 animes have been removed from the following visualisations because the studio information were missing. 
+
+
+**Disclaimer:** An anime which was co-produced by 2 studios will appear twice for technical purposes. In result, 569 rows have been duplicated. Hence, the following visualisations and table have slightly shifted statistics. However, if you select a studio, the updated visualisations are correct. This tab has to be used to get information from a studio in particular, please refer to the "Overview" tab for general purposes.
+
+
+
+
+Row {data-height = 800}
+-----------------------------------------------------------
+  
+  
+### three plotly {.no-title .no-padding}
+  
+```{r, fig.height=6}
+subplot(ply1,
+        ply2,
+        ply3,
+        widths = c(0.2, 0.4, 0.4),
+        heights = c(0.9),
+        margin = c(0.09, 0, 0, 0),
+        titleX = TRUE,
+        titleY = TRUE) %>% 
+  layout(showlegend = F) %>% 
+  highlight(on = "plotly_selected", 
+            off = "plotly_deselect",
+            selected = attrs_selected(opacity = 0.7)) %>% 
+  config(doubleClick = F,
+         displayModeBar = F)
+```
+
+
+Row
+-----------------------------------------------------------
+  
+### anime datatable {.no-title .colored .no-padding}
+  
+  List of Animes 
+```{r}
+DT::datatable(shared_data_expand_studio,
+              escape = F,
+              class = 'cell-border stripe',
+              rownames = F,
+              selection = "none",
+              colnames = c("Rank", "Title", "", "Type", "Episodes", "Aired", 
+                           "Duration (mins)", "Score", "Scored by", "Studio"),
+              options = list(columnDefs = list(list(visible = FALSE, targets = c(0)))))
+```
+
+
+
+
+
+
+About {data-icon="fa-info-circle"}
+===========================================================
+  
+  Row {data-height=800}
+-----------------------------------------------------------
+  
+### about txt {.no-title .no-padding .colored}
+  
+  Inspiration
+
+* This dashboard was made after seeing tavoosi's incredible interactive dashboard about suicide data (https://www.kaggle.com/tavoosi/suicide-data-full-interactive-dashboard).
+* Flexdashboard is a perfect compromise between Rmarkdown reports and Shiny apps. The HTML output can be used without a running R session and loading the dashboard doesn't take time unlike on kaggle.
+
+Data Source
+
+* The dataset used here is from azethoth42's "MyAnimeList Dataset" (https://www.kaggle.com/azathoth42/myanimelist).
+* Anime photos are directly loaded from MyAnimeList.net website.
+* The main page's illustration has been taken from : https://www.elsetge.cat/pngvi/hmRxih_wallpaper-simple-background-princess-mononoke-no-background/. I couldn't find out the original author.
+* The about page's illustration has been taken from : https://detectiveconaninternational.blogspot.com/2017/02/. I couldn't also find out the original author.
+
+Tools used
+
+* The code is written and executed on R language (R markdown script).
+* The dashboard has been made with the R package : flexdashboard.
+* Visualisations have been produced with highcharter and plotly R packages.
+
+
+
+
+**Do not forget to upvote if you liked this dashboard!**
+
+![](https://4.bp.blogspot.com/-mVg5qlkHaMM/W0XiIMkcw9I/AAAAAAAAAgE/k1MWRt4LmDYilJbU-j4hz3dBKL_kCRNoQCK4BGAYYCw/s1600/conan.png){height=200px}
+
+
+
+
+
+
+

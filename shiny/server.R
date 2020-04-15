@@ -266,7 +266,9 @@ shinyServer(function(input, output) {
       scale_y_continuous(
         breaks = seq(6, 7.5, 0.2),
         limits = c(6, 7.5)
-      )
+      ) +
+      ylab("Average score")
+    
   })
   
   # Line chart moyenne notes films par année
@@ -288,7 +290,9 @@ shinyServer(function(input, output) {
       scale_y_continuous(
         breaks = seq(4.5, 7.5, 0.5),
         limits = c(4.5, 7.5)
-      )
+      ) +
+      ylab("Average score")
+    
   })
   
   # Evolution de la classification TV au fil des décennies
@@ -362,7 +366,8 @@ shinyServer(function(input, output) {
         axis.title.x = element_text(size=14),
         axis.title.y = element_blank(),
       ) +
-      scale_y_continuous(limits = c(0, 10))
+      scale_y_continuous(limits = c(0, 10)) +
+      ylab("Time spent (in days)")
   })
   
   # Boxplot age utilisateurs par genre
@@ -421,7 +426,9 @@ shinyServer(function(input, output) {
       scale_y_continuous(
         limits = c(2, 9.5),
         breaks = seq(2, 9.5)
-      )
+      ) +
+      labs(x = "Scored by # people", y = "Score")
+    
   })
   
   # Graphe densité de la distribution des notes par décennie (TV animes)
@@ -449,8 +456,8 @@ shinyServer(function(input, output) {
   
   # Graphe densité de la distribution des notes par décennie (films)
   output$score_density_movie <- renderPlotly({
-    date_data %>% filter(decade %in% input$checkGroup3) %>% select(decade, type, score) %>% 
-      filter(!is.na(decade), type == 'Movie', score != 0) %>% 
+    date_data %>% filter(decade %in% input$checkGroup3, !is.na(decade), type == 'Movie', score != 0) %>% 
+      select(decade, type, score) %>% 
       ggplot(aes(score, group = decade, fill = decade)) +
       geom_density(adjust = 1.25, alpha = .7) +
       theme_ipsum() +
@@ -493,7 +500,8 @@ shinyServer(function(input, output) {
         expand = c(0, 0),
         limits = c(-1, 1001),
         breaks = seq(0, 1000, 200)
-      )
+      ) +
+      labs(x = "Age", y = "Time spent (in days)")
   })
   
   
