@@ -7,10 +7,6 @@ editor_options:
   chunk_output_type: inline
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ## VISU
 
 Import des packages :
@@ -105,6 +101,9 @@ line_nb_year <- ggplotly(line_nb_year)
 line_nb_year
 ```
 
+Ce graphique (*line chart*) représente l'évolution du nombre d'anime sortis par année. Le *line chart* est une bonne représentation de l'évolution (non-cyclique) d'une variable au fil du temps. En l'occurrence, il suffit d'un coup d'œil pour réaliser que le nombre de productions ne cesse de croître au fil des années.
+
+
 ```{r data_pie_type, echo=TRUE, message=FALSE, warning=FALSE}
 data_pie_type <- df_anime %>% 
   filter(type != "Unknown") %>% 
@@ -116,6 +115,8 @@ highchart() %>%
   hc_tooltip(borderWidth = 1.5, headerFormat = "",
   pointFormat = paste("<b>Type: {point.Type}</b> ({point.percentage:.1f}%)<br><b>Count:</b> {point.y}"))
 ```
+
+Ce diagramme circulaire permet de représenter un petit nombre de valeurs par des angles proportionnels à ces dernières. Il indique la proportion des différents types d'anime, leur part parmi l'ensemble total des anime compris dans le jeu de données. Ici, on peut constater que le type TV (= séries d'animation diffusées à la télévision) représente une majorité d'anime, à savoir 29,6% d'entre eux, contrairement aux clips musicaux dont la part est de 5,9% seulement.
 
 ```{r score_source, echo=TRUE, message=FALSE, warning=TRUE, fig.height=6, fig.width=9}
 score_source <- df_anime %>% 
@@ -138,6 +139,24 @@ score_source <- ggplotly(score_source)
 score_source
 ```
 
+Ce graphique « boîte à moustaches » (*box plot*) permet d'obtenir un aperçu des données mesurées très rapidement, ici la distribution des notes par source (un anime peut être une production originale, mais il est généralement l'adaptation d'une œuvre déjà existante). 
+
+Pour chaque « boîte », et donc chaque source, nous avons :
+- Sa médiane (barre verticale à l'intérieure de la boîte) ;
+- Les premier et troisième quartiles (respectivement les bords gauche et droit de la boîte);
+- Les bornes inférieure et supérieure (respectivement le début et la fin du segment);
+- Les valeurs potentiellement aberrantes (parfois des erreurs de saisie) sont représentées par les points noirs à gauche et/ou à droite de chaque segement.
+
+Chaque borne inférieure est déterminée par ce calcul : Q1 – (1.5 * IQR) où Q1 est le premier quartile et IQR l'écart inter-quartile (Q3 - Q1). Si la valeur minimale de la distribution est supérieure au résultat donné par ce calcul, elle fera office de borne inférieure.
+
+Le calcul de la borne supérieure est assez similaire : Q3 + (1.5 * IQR). De la même manière, si la valeur maximale de la distribution est inférieure au résultat produit par ce calcul, elle fera office de borne supérieure.
+
+Nous avons également ajouté une ligne en pointillé réprésentant la médiane globale, de tous les anime, indépendamment de la source.
+
+Prenons l'example des manga numériques (*digital manga*) comme source, nous remarquons que la médiane se situe très à gauche de la boîte, même très proche du Q1 ou de la borne inférieure, ce qui représente une asymétrie très importante. En revanche, il ne semble y avoir aucune valeur potentiellement aberrante (pas de points noirs visibles), les bornes inférieure et supérieure sont donc déterminées respectivement par les valeurs minimum et maximum de la distribution.
+
+Les anime adaptés de manga sont qui atteignent les notes les plus hautes, suivis de très près par les adaptation de *light novels* dont même le premier quartile Q1 est supérieur à la médiane globale !
+
 ```{r score_type, echo=TRUE, message=FALSE, warning=TRUE, fig.height=6, fig.width=9}
 score_type <- df_anime %>% 
   filter(airing == F & scored_by > 99) %>%
@@ -158,6 +177,10 @@ score_type <- df_anime %>%
 score_type <- ggplotly(score_type)
 score_type
 ```
+
+Il s'agit du même type de graphique que ci-dessus, ainsi la logique à suivre est la même, seulement il s'agit ici de la distribution des notes par type.
+
+Nous pouvons, par exemple, remarquer que les clips musicaux ainsi que les ONA (*Original net animation*, des productions directement diffusées sur internet, sur des plateformes de streaming) sont généralement moins bien notés que les autres. D'autre part, les séries d'animation diffusées à la télévision et les films s'en sortent beaucoup mieux.
 
 ```{r score_notes, echo=TRUE, fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
 rs_score_notes <- df_anime %>%
@@ -184,6 +207,8 @@ rs_score_notes <- df_anime %>%
 rs_score_notes <- ggplotly(rs_score_notes)
 rs_score_notes
 ```
+
+Grâce au graphique ci-dessus, il est possible de faire correspondre à l'intensité d'une grandeur variable une gamme de tons de couleurs. Il divise le plan en hexagones qui comptent le nombre de groupes d'anime (ici un groupe = 50 animes). Il ne s'agit que d'un choix arbitraire pour représenter au mieux les données, l'intérêt ici est avant tout de montrer la relation entre le score d'un anime et le nombre de notes attribuées à ce dernier. Le graphique dégage une tendance, en effet plus un anime est noté par un grand nombre d'utilisateurs, plus il est susceptible d'être très bien noté.
 
 ## TV ANIME
 
@@ -212,6 +237,8 @@ score_year_tv <- ggplotly(score_year_tv)
 score_year_tv
 ```
 
+Ce *line chart* représente l'évolution des notes au cours du temps. La moyenne des notes attribuées à des productions datant des années 1978 ou 1996 est très haute, contrairement à 1965 dont la moyenne est au plus bas. On remarque également une chute notable durant les années 2010.
+
 ```{r ratings_tv_decade, echo=TRUE, message=FALSE, warning=FALSE, fig.height=6, fig.width=9}
 ratings_tv_decade <- date_data %>%
   filter(!is.na(decade), type == "TV") %>% 
@@ -233,16 +260,17 @@ ratings_tv_decade <- ggplotly(ratings_tv_decade)
 ratings_tv_decade
 ```
 
+Ce graphique représente l'évolution de la classification au fil des décennies. On remarque rapidement que les productions ciblant un public agé de 13 ans ou plus sont de plus en plus nombreuses.
 
 ```{r bbl_100, echo=TRUE, message=FALSE, warning=FALSE, fig.height=6, fig.width=9}
 bbl_chart <- df_anime[df_anime$popularity != 0] %>% 
-  arrange(rank) %>% head(n = 100) %>%
+  arrange(popularity) %>% head(n = 100) %>%
   select(popularity, rank, title, scored_by, favorites, score) %>%
   filter(popularity <= 100) %>%
   mutate(point = (as.numeric(scored_by) * as.numeric(favorites) * as.numeric(score)) / 10^10) %>% 
   ggplot(aes(x = rank, y = popularity, size = point, color = popularity, text = title)) +
   geom_point(alpha = 0.7) +
-  scale_size(range = c(1.4, 19)) +
+  scale_size(range = c(0, 19)) +
   scale_color_viridis() +
   theme_ipsum() +
   theme(
@@ -259,15 +287,19 @@ bbl_chart <- df_anime[df_anime$popularity != 0] %>%
   ) +
   labs(title='TOP 100 Anime by rank and popularity', x = 'Rank', y = 'Popularity')
 
-bbl_chart <- ggplotly(bbl_chart, tooltip = c('rank', 'popularity'))
+bbl_chart <- ggplotly(bbl_chart, tooltip = c('rank', 'popularity', 'title'))
 bbl_chart
 ```
+
+Ce *bubble chart* représente les 100 animes les plus populaires. Ils sont représentés en fonction de leur rang dans le classement et de leur popularité. Le choix de ce type de graphique repose également sur une troisième variable qui s'ajoute au deux précentes, une variable *point* dont la formule se base sur le nombre de notes attribuées, le score ainsi que le nombre d'utilisateur ayant cet anime dans ses favoris. Elle sert à déterminer la taille de chaque bulle (donc la taille minimale est fixe dans le code).
+
+On peut constater qu'en s'appuyant les effets de ces 3 variables, *Fullmetal Alchemist: Brotherhood* semble être l'anime le mieux considéré par les utilisateurs de MyAnimeList (car le mieux noté, l'un des plus populaires, des plus notés et des plus représentés dans les favoris des membres).
 
 ```{r line_100, echo=TRUE, fig.height=5, fig.width=10, message=FALSE, warning=FALSE}
 point_plot_pop <- df_anime[df_anime$popularity != 0] %>%
   arrange(popularity) %>% head(n = 100) %>% 
   select(title, popularity, rank) %>%
-  ggplot(aes(x = popularity, y=rank)) +
+  ggplot(aes(x = popularity, y = rank)) +
   geom_line(color = 'black') +
   geom_point(size = 2, color = 'red') +
   theme_ipsum() +
@@ -284,9 +316,18 @@ point_plot_pop <- df_anime[df_anime$popularity != 0] %>%
   ) +
   ggtitle('Top 100 anime with their rank score')
   
-point_plot_pop <- ggplotly(point_plot_pop, tooltip=c('rank', 'popularity'))
+point_plot_pop <- ggplotly(point_plot_pop)
 point_plot_pop
 ```
+
+Ce graphique reprend 2 des variables utilisées dans le graphique précédent, à savoir le rang et la popularité. Il représente les 100 anime les plus populaires et leur rang associé.
+
+On remarque par exemple que le 17e anime le plus populaire est pourtant assez bas dans le classement (rang 2827).
+
+```{r rank_17_infos, echo=FALSE, warning=FALSE}
+df_anime %>% filter(popularity == 17) %>% select(title, popularity, rank, score)
+```
+
 
 ```{r score_density_decade, echo=TRUE, message=TRUE, warning=TRUE, fig.height=5, fig.width=10}
 score_density_dec <- date_data %>%
@@ -314,6 +355,10 @@ score_density_dec <- date_data %>%
 score_density_dec <- ggplotly(score_density_dec)
 score_density_dec
 ```
+
+Ce graphique représente la distribution des notes par décennie. Le graphique en aires empilées peut comporte plusieurs séries. Il met à la fois l'accent sur les changements dans le temps et sur les totaux de chaque catégorie. Dans ce type de graphique une aire peut en cacher une autre, mais ici les formes des courbes permettent d'avoir un bon aperçu des valeurs mesurées.
+
+On remarque qu'au fil des décennies, les anime ont tendance à être de mieux en mieux notés. En revanche, les notes sont plus étalées, elles sont globalement mieux réparties, contrairement aux années 1960 à 1980 qui montrent une forte concentration des notes attribuées entre 6 et 7.
 
 ## MOVIES
 

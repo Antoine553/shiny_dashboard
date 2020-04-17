@@ -178,13 +178,13 @@ shinyServer(function(input, output) {
   # Bubble chart rang et popularité
   output$bbl_chart_pop <- renderPlotly({
     df_anime[df_anime$popularity != 0] %>% 
-      arrange(rank) %>% head(n = input$slider_popularity) %>%
+      arrange(popularity) %>% head(n = input$slider_popularity) %>%
       select(popularity, rank, title, scored_by, favorites, score) %>%
       filter(popularity <= 100) %>%
       mutate(point = (as.numeric(scored_by) * as.numeric(favorites) * as.numeric(score)) / 10^10) %>% 
       ggplot(aes(x = rank, y = popularity, size = point, color = popularity, text = title)) +
       geom_point(alpha = 0.7) +
-      scale_size(range = c(1.4, 19)) +
+      scale_size(range = c(0, 19)) +
       scale_color_viridis() +
       theme_ipsum() +
       theme(
