@@ -1,5 +1,5 @@
 ---
-title: "Projet INFO0808 – Visualisation de données"
+title: "INFO0808 – Visualisation de données"
 author: "FUZELLIER Maxence, BARBET Antoine"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: 
@@ -199,7 +199,7 @@ Ce graphique (*line chart*) représente l'évolution du nombre d'anime sortis pa
 
 ******
 
-**Répartition des animes par type**
+**Répartition des anime par type**
 
 Code :
 ```{r data_pie_type, echo=TRUE, message=FALSE, warning=FALSE}
@@ -324,7 +324,7 @@ rs_score_notes <- ggplotly(rs_score_notes)
 rs_score_notes
 ```
 
-Grâce au graphique ci-dessus, il est possible de faire correspondre à l'intensité d'une grandeur variable une gamme de tons de couleurs. Il divise le plan en hexagones qui comptent le nombre de groupes d'anime (ici un groupe = 50 animes). Il ne s'agit que d'un choix arbitraire pour représenter au mieux les données, l'intérêt ici est avant tout de montrer la relation entre le score d'un anime et le nombre de notes attribuées à ce dernier. Le graphique dégage une tendance, en effet plus un anime est noté par un grand nombre d'utilisateurs, plus il est susceptible d'être très bien noté.
+Grâce au graphique ci-dessus, il est possible de faire correspondre à l'intensité d'une grandeur variable une gamme de tons de couleurs. Il divise le plan en hexagones qui comptent le nombre de groupes d'anime (ici un groupe = 50 anime). Il ne s'agit que d'un choix arbitraire pour représenter au mieux les données, l'intérêt ici est avant tout de montrer la relation entre le score d'un anime et le nombre de notes attribuées à ce dernier. Le graphique dégage une tendance, en effet plus un anime est noté par un grand nombre d'utilisateurs, plus il est susceptible d'être très bien noté.
 
 <br />
 
@@ -428,7 +428,7 @@ bbl_chart <- ggplotly(bbl_chart, tooltip = c('rank', 'popularity', 'title'))
 bbl_chart
 ```
 
-Ce *bubble chart* représente les 100 animes les plus populaires. Ils sont représentés en fonction de leur rang dans le classement et de leur popularité. Le choix de ce type de graphique repose également sur une troisième variable qui s'ajoute aux deux précentes, une variable *point* dont la formule se base sur le nombre de notes attribuées, le score ainsi que le nombre d'utilisateur ayant cet anime dans ses favoris. Elle sert à déterminer la taille de chaque bulle.
+Ce *bubble chart* représente les 100 anime les plus populaires. Ils sont représentés en fonction de leur rang dans le classement et de leur popularité. Le choix de ce type de graphique repose également sur une troisième variable qui s'ajoute aux deux précentes, une variable *point* dont la formule se base sur le nombre de notes attribuées, le score ainsi que le nombre d'utilisateur ayant cet anime dans ses favoris. Elle sert à déterminer la taille de chaque bulle.
 
 On peut constater qu'en s'appuyant les effets de ces 3 variables, *Fullmetal Alchemist: Brotherhood* semble être l'anime le mieux considéré par les utilisateurs de MyAnimeList (car le mieux noté, l'un des plus populaires, des plus notés et des plus représentés dans les favoris des membres).
 
@@ -721,6 +721,7 @@ Ce nuage de points nous permet instantanément de comprendre que les plus gros c
 L’application suit l’architecture classique déterminée par Shiny lors de la création d’un nouveau projet, ainsi elle se divise en deux parties :
 
 ### Interface utilisateur (UI)
+
 Il s’agit de l’interface utilisateur visible dans une page web. Elle regroupe tous les éléments de mise en forme et d'affichage de l'interface elle-même, on y retrouve les graphes, les tableaux ainsi que du texte, entre autres. L’utilisateur pourra interagir avec cette interface par le biais de boutons, de sliders, de cases, etc.
 
 ### Le serveur
@@ -733,11 +734,15 @@ Il s’agit de la « zone de travail ». Tous les calculs, toute la partie prép
 
 ### Input et Output
 
-D’une part, les inputs sont les composants (widgets) de l'interface graphique qui permettent aux utilisateurs de fournir des valeurs aux paramètres d'entrée. D’autre part, les outputs sont les composants qui permettent d'afficher des éléments résultant d'un traitement dans R (graphiques, tableaux, textes, ...). 
+D’une part, les inputs sont les composants (*widgets*) de l'interface graphique qui permettent aux utilisateurs de fournir des valeurs aux paramètres d'entrée. D’autre part, les outputs sont les composants qui permettent d'afficher des éléments résultant d'un traitement dans R (graphiques, tableaux, textes, ...). 
 
 ### Bootstrap
 
-Shiny utilise également le framework JS/CSS Bootstrap qui définit une page telle une grille : une page est divisée en colonnes (column()) et en lignes (fluidRow()), la hauteur d'une ligne est celle de son plus grand élément, la page est divisée en 12 colonnes, une colonne de largeur 6 occupera donc la moitié de l'espace horizontal.
+Shiny utilise également le framework JS/CSS Bootstrap qui définit une page telle une grille : une page est divisée en colonnes (*column()*) et en lignes (*fluidRow()*), la hauteur d'une ligne est celle de son plus grand élément, la page est divisée en 12 colonnes, une colonne de largeur 6 occupera donc la moitié de l'espace horizontal.
+
+<center>
+![](img/bootstrap.png)
+</center>
 
 ### Panels
 
@@ -759,7 +764,7 @@ Les panels permettent de réunir différents éléments (widgets, textes, images
 
 ### Sidebar
 
-Notre interface étant de type tableau de bord, elle possède une sidebar Shiny. La Sidebar est une barre latérale qui s'affiche avec une couleur d'arrière-plan distincte et contient des contrôles d'entrée. Elle occupe moins d’1/3 de la largeur horizontale de l’interface et est rétractable de manière responsive. Tout comme le header, elle est fixe et accompagne l’utilisateur lorsque la page défile (scrolling).
+Notre interface étant de type tableau de bord, elle possède une sidebar Shiny. La Sidebar est une barre latérale qui s'affiche avec une couleur d'arrière-plan distincte et contient des contrôles d'entrée. Elle occupe moins d’1/3 de la largeur horizontale de l’interface et est rétractable de manière responsive. Tout comme le header, elle est fixe et accompagne l’utilisateur lorsque la page défile (*scrolling*).
 
 ### Onglets
  
@@ -777,7 +782,7 @@ De 3 onglets contiennent des des *valueBoxes*, celles-ci mettent en lumière une
 </center>
 <br /> 
 
-Par exemple, la première affiche le nombre total d’animes japonais (quel que soit le type) contenus dans le jeu de données. La seconde affiche le genre le plus représenté, à savoir celui de la « Comédie ».
+Par exemple, la première affiche le nombre total d’anime japonais (quel que soit le type) contenus dans le jeu de données. La seconde affiche le genre le plus représenté, à savoir celui de la « Comédie ».
 
 En outre, certains graphiques similaires ou utilisant un même panel de contrôles peuvent être agencés en sous-onglets. Idem pour l’onglet « data » afin de passer d’un jeu de données à l’autre en un clic, sans encombrer la page de plusieurs tableaux les uns à la suite des autres.
 
@@ -788,7 +793,7 @@ Nous avons également travaillé l’ergonomie de notre architecture Shiny afin 
 
 ### Palette de couleurs Viridis
 
-La palette viridis a été développée pour la première fois pour le paquet python matplotlib, et a été implémentée dans R depuis. Les points forts de cette palette sont que ses couleurs sont parfaitement uniformes sur le plan de la perception, même lorsqu'elles sont imprimées en noir et blanc et les couleurs sont perçues par les formes les plus courantes de daltonisme.
+La palette viridis a été développée pour la première fois pour le paquet python *matplotlib*, et a été implémentée dans R depuis. Les points forts de cette palette sont que ses couleurs sont parfaitement uniformes sur le plan de la perception, même lorsqu'elles sont imprimées en noir et blanc et les couleurs sont perçues par les formes les plus courantes de daltonisme.
 
 <br />
 
@@ -796,9 +801,9 @@ La palette viridis a été développée pour la première fois pour le paquet py
 
 # **Bilan du projet**
 
-La visualisation des données est un ensemble de méthodes de représentation graphique, en deux ou trois dimensions, utilisant ou non de la couleur et des trames. Les moyens informatiques permettent de représenter des ensembles complexes de données, de manière plus simple, didactique et pédagogique.
+La visualisation des données est un ensemble de méthodes de représentation graphique. Elle consiste à transformer des données complexes en représentations visuelles simples pour faciliter la compréhension et l’exploitation des données. L’objectif est de rendre l’information accessible à tout le monde, ou plus précisément aux personnes susceptibles de prendre des décisions à partir des données récoltées.
 
-Ce projet a été réalisé dans le cadre du cours de visualisation de données. Celui-ci convoque des connaissances variées et fait le lien entre plusieurs modules de notre formation, afin de concevoir une application fonctionnelle prenant en compte l’expérience utilisateur et les mécanismes cognitifs qui lui sont inhérents. Il a été l’occasion pour nous, étudiants, de consolider des compétences en analyse, manipulation et visualisation de données, puis en acquérir de nouvelles par le biais d’outils permettant la création d’une interface intuitive basée sur ces dernières.
+Ce projet a été réalisé dans le cadre du cours de visualisation de données. Celui-ci convoque des connaissances variées et fait le lien entre plusieurs modules de notre formation, afin de concevoir une application fonctionnelle prenant en compte l’expérience utilisateur et les mécanismes cognitifs qui lui sont inhérents (cf. cours IHM). Il a été l’occasion pour nous, étudiants, de consolider des compétences en analyse exploratoire, manipulation et visualisation de données, puis en acquérir de nouvelles par le biais d’outils permettant la création d’une interface intuitive basée sur ces dernières.
 
 <br />
 
