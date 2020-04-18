@@ -299,7 +299,7 @@ shinyServer(function(input, output) {
   output$ratings_tv_decade <- renderPlotly({
     date_data %>%
       filter(!is.na(decade), type == "TV") %>% 
-      group_by("Decade" = decade, rating, .drop = F) %>% 
+      group_by("Decade" = decade, rating, .drop = T) %>% 
       summarise(Freq = n()) %>%
       ggplot(aes(x = Decade, y = Freq, group = rating, shape = rating, color = rating)) +
       geom_line(size = 1) +
