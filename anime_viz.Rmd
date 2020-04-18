@@ -247,6 +247,7 @@ score_source
 Ce graphique « boîte à moustaches » (*box plot*) permet d'obtenir un aperçu des données mesurées très rapidement, ici la distribution des notes par source (un anime peut être une production originale, mais il est généralement l'adaptation d'une œuvre déjà existante). 
 
 Pour chaque « boîte », et donc chaque source, nous avons :
+
 * Sa médiane (barre verticale à l'intérieure de la boîte) ;
 * Les premier et troisième quartiles (respectivement les bords gauche et droit de la boîte) ;
 * Les bornes inférieure et supérieure (respectivement le début et la fin du segment) ;
