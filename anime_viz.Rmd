@@ -10,21 +10,37 @@ editor_options:
   chunk_output_type: inline
 ---
 
+<style>
+body {
+  text-align: justify;
+  font-size: 14pt;
+}
+</style>
+
+
+<body>
+
 ******
 
+<center>
+**↓↓ Accès au projet ↓↓**
+<br />
 [Lien GitHub du projet](https://github.com/fuzellier/shiny_dashboard)
+</center>
 
 ******
 
-# Introduction
+# **Introduction**
 
 Dans le cadre du module de visualisation de données, nous avions abordé l’analyse exploratoire et pris en main des outils permettant de générer des graphiques grâce au langage R, à partir d’un ou plusieurs jeux de données. Ainsi, notre choix s'est porté sur des données statistiques relatives à l’animation japonaise. Celles-ci proviennent du site internet [MyAnimeList](https://myanimelist.net/) et contiennent également des informations publiques sur un certain nombre d'utilisateurs.
 
 Ce projet de visualisation consiste en l'utilisation d'outils R adaptés afin de visualiser nos données, produire un rapport généré via R MarkDown et enfin concevoir une interface légère grâce à R Shiny.
 
+<br />
+
 ******
 
-# Outils et environnement de travail
+# **Outils et environnement de travail**
 
 
 ## R et RStudio 
@@ -70,7 +86,7 @@ library(shiny)
 library(shinydashboard)
 ```
 
-# Chargement et pré-traitement des données
+# **Données**
 
 Chargement des jeux de données
 
@@ -124,9 +140,11 @@ duration_data <- df_anime %>%
          duration = na_if(duration, 0))
 ```
 
+<br />
+
 ******
 
-# Visualisation des données
+# **Visualisation des données**
 
 ## Le choix d’un graphique
 
@@ -146,6 +164,8 @@ Il existe quatre grandes familles de graphiques :
 ******
 
 ## Vue d'ensemble (*overview*)
+
+**Nombre d'anime par année**
 
 Code :
 ```{r line_nb_year, echo=TRUE, message=FALSE, warning=FALSE, fig.height=6, fig.width=9}
@@ -175,7 +195,11 @@ line_nb_year
 
 Ce graphique (*line chart*) représente l'évolution du nombre d'anime sortis par année. Le *line chart* est une bonne représentation de l'évolution (non-cyclique) d'une variable au fil du temps. En l'occurrence, il suffit d'un coup d'œil pour réaliser que le nombre de productions ne cesse de croître au fil des années.
 
+<br />
+
 ******
+
+**Répartition des animes par type**
 
 Code :
 ```{r data_pie_type, echo=TRUE, message=FALSE, warning=FALSE}
@@ -192,7 +216,11 @@ highchart() %>%
 
 Ce diagramme circulaire permet de représenter un petit nombre de valeurs par des angles proportionnels à ces dernières. Il indique la proportion des différents types d'anime, leur part parmi l'ensemble total des anime compris dans le jeu de données. Ici, on peut constater que le type TV (= séries d'animation diffusées à la télévision) représente une majorité d'anime, à savoir 29,6% d'entre eux, contrairement aux clips musicaux dont la part est de 5,9% seulement.
 
+<br/>
+
 ******
+
+**Distribution des notes par source**
 
 Code :
 ```{r score_source, echo=TRUE, message=FALSE, warning=TRUE, fig.height=6, fig.width=9}
@@ -236,6 +264,8 @@ Les anime adaptés de manga sont qui atteignent les notes les plus hautes, suivi
 
 ******
 
+**Distribution des notes par type**
+
 Code :
 ```{r score_type, echo=TRUE, message=FALSE, warning=TRUE, fig.height=6, fig.width=9}
 score_type <- df_anime %>% 
@@ -258,11 +288,13 @@ score_type <- ggplotly(score_type)
 score_type
 ```
 
-Il s'agit du même type de graphique que ci-dessus, ainsi la logique à suivre est la même, seulement il s'agit ici de la distribution des notes par type.
+Il s'agit du même type de graphique que ci-dessus, ainsi la logique à suivre est la même, seulement il s'agit ici de la distribution des notes par type. Nous pouvons, par exemple, remarquer que les clips musicaux ainsi que les ONA (*Original net animation*, des productions directement diffusées sur internet, sur des plateformes de streaming) sont généralement moins bien notés que les autres. D'autre part, les séries d'animation diffusées à la télévision et les films s'en sortent beaucoup mieux.
 
-Nous pouvons, par exemple, remarquer que les clips musicaux ainsi que les ONA (*Original net animation*, des productions directement diffusées sur internet, sur des plateformes de streaming) sont généralement moins bien notés que les autres. D'autre part, les séries d'animation diffusées à la télévision et les films s'en sortent beaucoup mieux.
+<br />
 
 ******
+
+**Relation entre le score et le nombre de notes attribuées**
 
 Code :
 ```{r score_notes, echo=TRUE, fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
@@ -293,9 +325,13 @@ rs_score_notes
 
 Grâce au graphique ci-dessus, il est possible de faire correspondre à l'intensité d'une grandeur variable une gamme de tons de couleurs. Il divise le plan en hexagones qui comptent le nombre de groupes d'anime (ici un groupe = 50 animes). Il ne s'agit que d'un choix arbitraire pour représenter au mieux les données, l'intérêt ici est avant tout de montrer la relation entre le score d'un anime et le nombre de notes attribuées à ce dernier. Le graphique dégage une tendance, en effet plus un anime est noté par un grand nombre d'utilisateurs, plus il est susceptible d'être très bien noté.
 
+<br />
+
 ******
 
 ## Séries d'animation (*TV anime*)
+
+**Score moyen par année**
 
 Code :
 ```{r score_year_tv, echo=TRUE, message=FALSE, warning=FALSE, fig.height=6, fig.width=9}
@@ -325,13 +361,17 @@ score_year_tv
 
 Ce *line chart* représente l'évolution des notes au cours du temps. La moyenne des notes attribuées à des productions datant des années 1978 ou 1996 est très haute, contrairement à 1965 dont la moyenne est au plus bas. On remarque également une chute notable durant les années 2010.
 
+<br />
+
 ******
+
+**Évolution de classification par décennie**
 
 Code :
 ```{r ratings_tv_decade, echo=TRUE, message=FALSE, warning=FALSE, fig.height=6, fig.width=9}
 ratings_tv_decade <- date_data %>%
   filter(!is.na(decade), type == "TV") %>% 
-  group_by("Decade" = decade, rating, .drop = F) %>% 
+  group_by("Decade" = decade, rating, .drop = T) %>% 
   summarise(Freq = n()) %>%
   ggplot(aes(x = Decade, y = Freq, group = rating, shape = rating, color = rating)) +
   geom_line(size = 1) +
@@ -351,7 +391,11 @@ ratings_tv_decade
 
 Ce graphique représente l'évolution de la classification au fil des décennies. On remarque rapidement que les productions ciblant un public agé de 13 ans ou plus sont de plus en plus nombreuses.
 
+<br />
+
 ******
+
+**Top 100 des séries d'animation les plus populaires** (*bubble chart*)
 
 Code :
 ```{r bbl_100, echo=TRUE, message=FALSE, warning=FALSE, fig.height=6, fig.width=9}
@@ -383,11 +427,15 @@ bbl_chart <- ggplotly(bbl_chart, tooltip = c('rank', 'popularity', 'title'))
 bbl_chart
 ```
 
-Ce *bubble chart* représente les 100 animes les plus populaires. Ils sont représentés en fonction de leur rang dans le classement et de leur popularité. Le choix de ce type de graphique repose également sur une troisième variable qui s'ajoute aux deux précentes, une variable *point* dont la formule se base sur le nombre de notes attribuées, le score ainsi que le nombre d'utilisateur ayant cet anime dans ses favoris. Elle sert à déterminer la taille de chaque bulle (donc la taille minimale est fixe dans le code).
+Ce *bubble chart* représente les 100 animes les plus populaires. Ils sont représentés en fonction de leur rang dans le classement et de leur popularité. Le choix de ce type de graphique repose également sur une troisième variable qui s'ajoute aux deux précentes, une variable *point* dont la formule se base sur le nombre de notes attribuées, le score ainsi que le nombre d'utilisateur ayant cet anime dans ses favoris. Elle sert à déterminer la taille de chaque bulle.
 
 On peut constater qu'en s'appuyant les effets de ces 3 variables, *Fullmetal Alchemist: Brotherhood* semble être l'anime le mieux considéré par les utilisateurs de MyAnimeList (car le mieux noté, l'un des plus populaires, des plus notés et des plus représentés dans les favoris des membres).
 
+<br />
+
 ******
+
+**Top 100 des séries d'animation les plus populaires** (*points line chart*)
 
 Code :
 ```{r line_100, echo=TRUE, fig.height=5, fig.width=10, message=FALSE, warning=FALSE}
@@ -415,15 +463,17 @@ point_plot_pop <- ggplotly(point_plot_pop)
 point_plot_pop
 ```
 
-Ce graphique reprend 2 des variables utilisées dans le graphique précédent, à savoir le rang et la popularité. Il représente les 100 anime les plus populaires et leur rang associé.
-
-On remarque par exemple que le 17e anime le plus populaire est pourtant assez bas dans le classement (rang 2827).
+Ce graphique reprend 2 des variables utilisées dans le graphique précédent, à savoir le rang et la popularité. Il représente les 100 anime les plus populaires et leur rang associé. On remarque par exemple que le 17e anime le plus populaire est pourtant assez bas dans le classement (rang 2827).
 
 ```{r rank_17_infos, echo=FALSE, warning=FALSE}
 df_anime %>% filter(popularity == 17) %>% select(title, popularity, rank, score)
 ```
 
+<br />
+
 ******
+
+**Distribution des notes par décennie**
 
 Code :
 ```{r score_density_decade, echo=TRUE, message=TRUE, warning=TRUE, fig.height=5, fig.width=10}
@@ -455,11 +505,15 @@ score_density_dec
 
 Ce graphique représente la distribution des notes par décennie. Le graphique en aires empilées peut comporte plusieurs séries. Il met à la fois l'accent sur les changements dans le temps et sur les totaux de chaque catégorie. Dans ce type de graphique une aire peut en cacher une autre, mais ici les formes des courbes permettent d'avoir un bon aperçu des valeurs mesurées.
 
-On remarque qu'au fil des décennies, les anime ont tendance à être de mieux en mieux notés. En revanche, les notes sont plus étalées, elles sont globalement mieux réparties, contrairement aux années 1960 à 1980 qui montrent une forte concentration des notes attribuées entre 6 et 7.
+On remarque qu'au fil des décennies, les anime ont tendance à être de mieux en mieux notés. En revanche, les notes sont plus étalées, elles sont globalement mieux réparties, contrairement aux années 1960 à 1979 qui montrent une forte concentration des notes attribuées entre 6 et 7.
+
+<br />
 
 ******
 
 ## Films d'animation
+
+**Score moyen par année**
 
 Code :
 ```{r score_year_movie, echo=TRUE, message=FALSE, warning=FALSE, fig.height=6, fig.width=9}
@@ -488,9 +542,13 @@ score_year_movie <- ggplotly(score_year_movie)
 score_year_movie
 ```
 
-aaaaaaaaaaaaaaaa
+Ce *line chart* représente l'évolution des notes au cours du temps. Contrairement à la tendance générale de la moyenne des notes des séries d'animation, le score moyen des films s'améliore au fil des années.
+
+<br />
 
 ******
+
+**Évolution de la classification par décennie**
 
 Code :
 ```{r ratings_movie_decade, echo=TRUE, message=FALSE, warning=FALSE, fig.height=6, fig.width=9}
@@ -514,9 +572,13 @@ ratings_movie_decade <- ggplotly(ratings_movie_decade)
 ratings_movie_decade
 ```
 
-aaaaaaaaaaaaaaaaa
+Ce graphique représente l’évolution de la classification des films d'animation au fil des décennies. On remarque que la tendance des films ou bien des séries d'animation est globalement la même, en revanche il y a eu une plus forte augmentation du nombre de films « tout public » en comparaison avec les séries. 
+
+<br />
 
 ******
+
+**Distribution des notes par décennie**
 
 Code :
 ```{r score_density_movie, echo=TRUE, message=FALSE, warning=FALSE, fig.height=6, fig.width=9}
@@ -546,11 +608,15 @@ score_density_movie <- ggplotly(score_density_movie)
 score_density_movie
 ```
 
-aaaaaaaaaaaaaaaa
+Ce graphique représente la distribution des notes des films d'animation par décennie. On remarque tout comme les séries, que les films ont tendance à être de mieux en mieux notés. Les notes des films plus récents sont plus étalées, elles sont globalement mieux réparties, contrairement aux années 1920 à 1939, par exemple, qui montrent une forte concentration des notes attribuées entre 5 et 5,5.
+
+<br />
 
 ******
 
 ## Utilisateurs
+
+**Âge et temps de visionnage (en jours) des utilisateurs et par genre**
 
 Code :
 ```{r box_gender_age, echo=TRUE, message=FALSE, warning=FALSE}
@@ -598,9 +664,18 @@ subplot <- subplot(box_gender_age, box_gender_spent, nrows=1, titleY = T, margin
 subplot
 ```
 
-aaaaaaaaaaa
+Voici à nouveaux des *box plots* avec les mêmes spécifictés (quartiles, médiane, bornes, etc.) que ceux présentés précédemment.
+
+Nous remarquons entere autres que l'âge médian des utilisateurs, femmes ou hommes, est de 26 ans.
+75% des utilisateurs ont 23 ans ou plus, 25% des femmes ont plus de 29 ans et 25% des hommes plus de 30 ans.
+
+Le temps médian passé par les femmes à regarder des anime est de 35,14 jours, celui des hommes est de 57,65 jours.
+
+<br />
 
 ******
+
+**Âge des utilisateurs**
 
 Code :
 ```{r scatter_age, echo=TRUE, fig.height=6, fig.width=9, message=FALSE, warning=FALSE}
@@ -632,11 +707,13 @@ scatter_age <- ggplotly(scatter_age)
 scatter_age
 ```
 
+Ce nuage de points nous permet instantanément de comprendre que les plus gros consommateurs d'anime se situent à peu de choses près dans la tranche d'âge 18-40 ans.
 
+<br />
 
 ******
 
-# Interface Shiny
+# **Interface graphique**
 
 ## Spécificités liées à Shiny
 
@@ -697,7 +774,8 @@ De 3 onglets contiennent des des *valueBoxes*, celles-ci mettent en lumière une
 <center>
 ![](img/valueboxes.png)
 </center>
- 
+<br /> 
+
 Par exemple, la première affiche le nombre total d’animes japonais (quel que soit le type) contenus dans le jeu de données. La seconde affiche le genre le plus représenté, à savoir celui de la « Comédie ».
 
 En outre, certains graphiques similaires ou utilisant un même panel de contrôles peuvent être agencés en sous-onglets. Idem pour l’onglet « data » afin de passer d’un jeu de données à l’autre en un clic, sans encombrer la page de plusieurs tableaux les uns à la suite des autres.
@@ -711,15 +789,17 @@ Nous avons également travaillé l’ergonomie de notre architecture Shiny afin 
 
 La palette viridis a été développée pour la première fois pour le paquet python matplotlib, et a été implémentée dans R depuis. Les points forts de cette palette sont que ses couleurs sont parfaitement uniformes sur le plan de la perception, même lorsqu'elles sont imprimées en noir et blanc et les couleurs sont perçues par les formes les plus courantes de daltonisme.
 
+<br />
 
+******
 
-# Bilan du projet
+# **Bilan du projet**
 
 La visualisation des données est un ensemble de méthodes de représentation graphique, en deux ou trois dimensions, utilisant ou non de la couleur et des trames. Les moyens informatiques permettent de représenter des ensembles complexes de données, de manière plus simple, didactique et pédagogique.
 
 Ce projet a été réalisé dans le cadre du cours de visualisation de données. Celui-ci convoque des connaissances variées et fait le lien entre plusieurs modules de notre formation, afin de concevoir une application fonctionnelle prenant en compte l’expérience utilisateur et les mécanismes cognitifs qui lui sont inhérents. Il a été l’occasion pour nous, étudiants, de consolider des compétences en analyse, manipulation et visualisation de données, puis en acquérir de nouvelles par le biais d’outils permettant la création d’une interface intuitive basée sur ces dernières.
 
+<br />
 
-
-
-
+******
+</body>
