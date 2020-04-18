@@ -242,7 +242,7 @@ Ce *line chart* représente l'évolution des notes au cours du temps. La moyenne
 ```{r ratings_tv_decade, echo=TRUE, message=FALSE, warning=FALSE, fig.height=6, fig.width=9}
 ratings_tv_decade <- date_data %>%
   filter(!is.na(decade), type == "TV") %>% 
-  group_by("Decade" = decade, rating, .drop = F) %>% 
+  group_by("Decade" = decade, rating, .drop = T) %>% 
   summarise(Freq = n()) %>%
   ggplot(aes(x = Decade, y = Freq, group = rating, shape = rating, color = rating)) +
   geom_line(size = 1) +
