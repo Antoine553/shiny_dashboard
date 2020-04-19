@@ -38,4 +38,5 @@ GRTAGS
 GSYMS
 GTAGS
 anime_viz.R
-anime_viz.html
+anime_dashboard.html
+anime_dashboard.Rmd

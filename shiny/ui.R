@@ -144,7 +144,7 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                             width = 4,
                             status = "primary",
                             solidHeader = TRUE,
-                            "Popularity:", # br(), "More box content",
+                            "Number of data to show:", # br(), "More box content",
                             sliderInput("slider_popularity", "Slider input:", 1, 100, 100, 10)
                         )
                     ),
